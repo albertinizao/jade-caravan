@@ -1,0 +1,28 @@
+schema: spec-driven
+
+context: |
+  Project: Jade-Caravan
+  Domain: Pathfinder 1e caravan management for the Kingmaker/Jade Regent campaign.
+  Stack: Planned backend Java 21 + Spring Boot + PostgreSQL/Flyway, frontend Vue 3 + Vite + TypeScript.
+  Architecture: Pure domain and calculation engine, REST API adapters, Vue presentation layer, immutable audit trail.
+  Testing: Deterministic domain tests, application tests, API integration, acceptance scenarios derived from the normative docs.
+
+rules:
+  proposal:
+    - Respect source precedence and surface unresolved ambiguities explicitly.
+    - Include rollback or fallback options for risky or campaign-specific decisions.
+  specs:
+    - Use MUST/SHALL language for normative requirements.
+    - Prefer Given/When/Then scenarios when a requirement has an observable outcome.
+  design:
+    - Keep calculations deterministic and explainable.
+    - Document trade-offs for configurable rules and campaign decisions.
+  tasks:
+    - Group work by vertical slice and by bounded context.
+    - Keep each implementation chunk small enough to review in one sitting.
+  apply:
+    - Preserve existing patterns and keep domain logic outside controllers and views.
+  verify:
+    - Verify breakdowns, warnings, blockers, and auditability—not only final totals.
+  archive:
+    - Do not destroy historical specs; move completed work into the archive trail.
