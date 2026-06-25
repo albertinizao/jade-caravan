@@ -25,11 +25,11 @@ No se deben guardar como verdad primaria los totales de consumo, velocidad, capa
 
 ## Jerarquía de fuentes
 
-1. **`Carros Updated.pdf`**: cambios específicos de esta campaña. Prevalece ante cualquier regla contradictoria.
-2. **`Reglas de Caravana.pdf`**: reglamento operativo personalizado de la caravana.
-3. **`Guia jugador Regente de jade.pdf`**: referencia oficial usada solo para completar lagunas que los documentos anteriores no modifiquen.
-4. **`Caravana Regente de Jade(1).xlsx`**: fotografía del estado actual; aporta datos, no reglas.
-5. **Decisiones del director posteriores**: prevalecen sobre todo lo anterior y deben quedar registradas como una nueva versión de reglas.
+1. **Decisiones del director posteriores**: prevalecen sobre todo lo anterior y deben quedar registradas como una nueva versión de reglas.
+2. **`Carros Updated.pdf`**: cambios específicos de esta campaña. Prevalece ante cualquier regla contradictoria.
+3. **`Reglas de Caravana.pdf`**: reglamento operativo personalizado de la caravana.
+4. **`Guia jugador Regente de jade.pdf`**: referencia oficial usada solo para completar lagunas que los documentos anteriores no modifiquen.
+5. **`Caravana Regente de Jade(1).xlsx`**: fotografía del estado actual; aporta datos, no reglas, y solo sirve como semilla observacional.
 
 ## Documentos
 

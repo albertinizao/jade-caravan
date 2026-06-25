@@ -18,19 +18,21 @@ Cada regla que requiera una decisión del director se implementará mediante:
 
 | Prioridad | Fuente | Uso |
 |---:|---|---|
-| 1 | `Carros Updated.pdf` | Sobrescribe reglas concretas: trineos, aislamiento para el frío, espacio extendido separado, nevera, patines de hielo, estufa, combustible y oficios añadidos. |
-| 2 | `Reglas de Caravana.pdf` | Regla operativa general de esta campaña. |
-| 3 | `Guia jugador Regente de jade.pdf` | Completa fórmulas y procedimientos ausentes, sin recuperar reglas que hayan sido modificadas. |
-| 4 | Excel de la caravana | Estado de partida, inventario y distribución vigente. |
+| 1 | Decisiones posteriores del director | Sobrescriben todo lo anterior y deben quedar registradas como una nueva `RuleSetVersion`. |
+| 2 | `Carros Updated.pdf` | Sobrescribe reglas concretas: trineos, aislamiento para el frío, espacio extendido separado, nevera, patines de hielo, estufa, combustible y oficios añadidos. |
+| 3 | `Reglas de Caravana.pdf` | Regla operativa general de esta campaña. |
+| 4 | `Guia jugador Regente de jade.pdf` | Completa fórmulas y procedimientos ausentes, sin recuperar reglas que hayan sido modificadas. |
+| 5 | Excel de la caravana | Estado de partida, inventario y distribución vigente; solo sirve como semilla observacional, no como fuente de reglas. |
 
 ### 2.2 Regla de prevalencia por conflicto
 
 Cuando dos fuentes definan el mismo concepto:
 
-1. aplicar la versión de `Carros Updated.pdf`;
-2. si no existe, aplicar `Reglas de Caravana.pdf`;
-3. si sigue sin existir, aplicar la guía oficial;
-4. si aún falta información, no inventar una regla silenciosamente: registrar una decisión de campaña en `RuleDecision`.
+1. aplicar la decisión posterior del director si existe;
+2. si no existe, aplicar la versión de `Carros Updated.pdf`;
+3. si no existe, aplicar `Reglas de Caravana.pdf`;
+4. si sigue sin existir, aplicar la guía oficial;
+5. si aún falta información, no inventar una regla silenciosamente: registrar una decisión de campaña en `RuleDecision`.
 
 ## 3. Qué debe automatizarse
 
@@ -82,6 +84,6 @@ Los eventos y cálculos cerrados deben apuntar a la versión aplicada. Cambiar u
 
 ## 7. Requisito de auditoría
 
-Una operación que cambie recursos, daño, roles, alojamientos, tiro, descontento o estado de un día debe crear un `LedgerEntry` o `EventLog`.
+Una operación que cambie recursos, daño, roles, alojamientos, tiro, descontento o estado de un día debe crear un `LedgerEntry` o `EventLog` inmutable.
 
 No se permite editar silenciosamente un total histórico. Las correcciones se hacen mediante una operación de ajuste con motivo.
