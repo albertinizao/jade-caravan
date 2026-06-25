@@ -56,9 +56,9 @@ Stacking rules for `Consumo eficiente` and `Organización impecable` MUST remain
 
 The system MUST keep celebration stacking and replacement behavior configurable until resolved.
 
-### 13. Destruction rules
+### 13. Destruction rules (resolved)
 
-The campaign-specific destruction rule MUST take precedence over the generic rule, and the system MUST make that choice explicit.
+The campaign-specific destruction rule takes precedence over the generic rule. The applied campaign decision is `2d10+5`, and the system MUST make that resolved choice explicit.
 
 ### 14. Slavery subsystem
 
