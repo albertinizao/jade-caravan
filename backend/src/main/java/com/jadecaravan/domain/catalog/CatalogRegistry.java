@@ -5,6 +5,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class CatalogRegistry {
 
@@ -25,6 +26,8 @@ public final class CatalogRegistry {
                 CatalogName.CART_TYPES.description(),
                 true,
                 List.of(
+                        cart("ARCANE_CART", "Carro arcano", CartCategory.SPECIAL, "500 po", 50000, 50, 5, 8, "2 / 8", 2, 2, 2, List.of("máximo 1"), List.of("componentes -10 po", "concentración +4 una vez/día por lanzador"), false, source("docs/04-catalogos.md", "1.3")),
+                        cart("DIVINER_CART", "Carro de adivino", CartCategory.TRAVELLER, "400 po", 40000, 60, 5, 5, "1 / 4", 1, 1, 4, List.of("máximo 1"), List.of("habilita Adivino"), false, source("docs/04-catalogos.md", "1.2")),
                         cart("COVERED_CART", "Carro cubierto", CartCategory.TRAVELLER, "150 po", 15000, 30, 5, 4, "1 grande / 4 medianas", 2, 8, 4, List.of(), List.of(), false, source("docs/04-catalogos.md", "1.1")),
                         cart("TRAVELLER_CART", "Carro de viajeros", CartCategory.TRAVELLER, "200 po", 20000, 60, 5, 10, "2 / 8", 2, 8, 4, List.of(), List.of("+1 CA"), false, source("docs/04-catalogos.md", "1.1")),
                         cart("SLAVER_CART", "Carro de esclavista", CartCategory.TRAVELLER, "150 po", 15000, 30, 5, 5, "1 / 4", 2, 16, 2, List.of("máximo 2", "solo esclavos"), List.of(), false, source("docs/04-catalogos.md", "1.1")),
@@ -33,6 +36,13 @@ public final class CatalogRegistry {
                         cart("COMFORT_CARRIAGE", "Carruaje cómodo", CartCategory.TRAVELLER, "250 po", 25000, 60, 5, 6, "1 / 4", 1, 4, 4, List.of(), List.of(), false, source("docs/04-catalogos.md", "1.1")),
                         cart("FAMILY_CARRIAGE", "Carruaje familiar", CartCategory.TRAVELLER, "150 po", 15000, 60, 5, 10, "2 / 8", 2, 6, 4, List.of("1 por cada 5 carros", "pequeños a 0.5"), List.of(), false, source("docs/04-catalogos.md", "1.1")),
                         cart("ROYAL_CARRIAGE", "Carruaje real", CartCategory.TRAVELLER, "775 po", 77500, 80, 5, 8, "2 / 8", 2, 3, 2, List.of("máximo 1"), List.of("+2 Determinación por pasajero alojado"), false, source("docs/04-catalogos.md", "1.1")),
+                        cart("SUPPLY_CART", "Carro de suministros", CartCategory.CARGO, "300 po", 30000, 60, 5, 10, "2 / 8", 1, 1, 20, List.of("solo suministros y perecederos"), List.of(), false, source("docs/04-catalogos.md", "1.2")),
+                        cart("MUSEUM_CART", "Carro museo", CartCategory.CARGO, "350 po", 35000, 60, 5, 5, "1 / 4", 1, 1, 6, List.of("máximo 1", "solo tesoro", "ingresos en asentamiento"), List.of(), false, source("docs/04-catalogos.md", "1.2")),
+                        cart("WORKSHOP_CART", "Carro con taller", CartCategory.SPECIAL, "500 po", 50000, 60, 5, 8, "2 / 8", 1, 2, 4, List.of(), List.of("artesanía durante viaje"), false, source("docs/04-catalogos.md", "1.3")),
+                        cart("SCHOOL_CART", "Carro escuela", CartCategory.SPECIAL, "375 po", 37500, 60, 5, 8, "2 / 8", 2, 2, 4, List.of("máximo 1", "hasta dos profesores"), List.of(), false, source("docs/04-catalogos.md", "1.3")),
+                        cart("GARDEN_CART", "Carro huerto", CartCategory.SPECIAL, "300 po", 30000, 60, 5, 10, "2 / 8", 1, 2, 1, List.of("solo alojados pueden ser agricultores"), List.of(), false, source("docs/04-catalogos.md", "1.3")),
+                        cart("MEDICAL_CART", "Carro médico", CartCategory.SPECIAL, "300 po", 30000, 40, 5, 10, "2 / 8", 2, 6, 1, List.of("pasajeros alojados duplican cuidados largos"), List.of(), false, source("docs/04-catalogos.md", "1.3")),
+                        cart("EMPTY_CART", "Carro vacío", CartCategory.SPECIAL, "200 po", 20000, 60, 5, 10, "2 / 8", 2, 3, 5, List.of("sin beneficio definido"), List.of(), false, source("docs/04-catalogos.md", "1.3")),
                         cart("PASSENGER_SLED", "Trineo de pasajeros", CartCategory.TRAVELLER, "10 po", 1000, 10, 3, 4, "2 medianas", 2, 2, 1, List.of(), List.of("actualización de campaña"), true, source("docs/04-catalogos.md", "1.1")),
                         cart("CARGO_SLED", "Trineo de carga", CartCategory.CARGO, "10 po", 1000, 10, 3, 4, "2 medianas", 2, 1, 2, List.of(), List.of("actualización de campaña"), true, source("docs/04-catalogos.md", "1.1")),
                         cart("TAVERN_CART", "Carro taberna", CartCategory.SPECIAL, "pendiente", (BigDecimal) null, 60, 5, 10, "2 / 8", 2, 3, 5, List.of("catálogo personalizado de campaña", "sin regla fuente definitiva"), List.of("sin beneficio definido"), true, source("docs/04-catalogos.md", "1.1 + docs/09-estado-inicial.md"), "Entrada personalizada hasta resolver D-08."))));
@@ -204,8 +214,57 @@ public final class CatalogRegistry {
         return document;
     }
 
+    public Optional<CartTypeCatalogEntry> findCartType(String key) {
+        return findEntry(CatalogName.CART_TYPES, CartTypeCatalogEntry.class, key);
+    }
+
+    public CartTypeCatalogEntry cartType(String key) {
+        return findCartType(key).orElseThrow(() -> new IllegalArgumentException("Unknown cart type: " + key));
+    }
+
+    public Optional<UpgradeCatalogEntry> findUpgrade(String key) {
+        return findEntry(CatalogName.UPGRADES, UpgradeCatalogEntry.class, key);
+    }
+
+    public UpgradeCatalogEntry upgrade(String key) {
+        return findUpgrade(key).orElseThrow(() -> new IllegalArgumentException("Unknown upgrade: " + key));
+    }
+
+    public Optional<CargoCatalogEntry> findCargo(String key) {
+        return findEntry(CatalogName.CARGO, CargoCatalogEntry.class, key);
+    }
+
+    public CargoCatalogEntry cargo(String key) {
+        return findCargo(key).orElseThrow(() -> new IllegalArgumentException("Unknown cargo: " + key));
+    }
+
+    public Optional<RoleCatalogEntry> findRole(String key) {
+        return findEntry(CatalogName.ROLES, RoleCatalogEntry.class, key);
+    }
+
+    public RoleCatalogEntry role(String key) {
+        return findRole(key).orElseThrow(() -> new IllegalArgumentException("Unknown role: " + key));
+    }
+
+    public Optional<FeatCatalogEntry> findFeat(String key) {
+        return findEntry(CatalogName.FEATS, FeatCatalogEntry.class, key);
+    }
+
+    public FeatCatalogEntry feat(String key) {
+        return findFeat(key).orElseThrow(() -> new IllegalArgumentException("Unknown feat: " + key));
+    }
+
+    public Optional<BeastCatalogEntry> findBeast(String key) {
+        return findEntry(CatalogName.BEASTS, BeastCatalogEntry.class, key);
+    }
+
+    public BeastCatalogEntry beast(String key) {
+        return findBeast(key).orElseThrow(() -> new IllegalArgumentException("Unknown beast: " + key));
+    }
+
     public List<CatalogSummary> summaries() {
         return documents.values().stream()
+                .sorted((left, right) -> Integer.compare(left.catalogName().ordinal(), right.catalogName().ordinal()))
                 .map(document -> new CatalogSummary(
                         document.catalogName(),
                         document.title(),
@@ -413,6 +472,20 @@ public final class CatalogRegistry {
 
     private static String stringify(Object value) {
         return value == null ? null : value.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends CatalogEntry> Optional<T> findEntry(CatalogName catalogName, Class<T> entryType, String key) {
+        Objects.requireNonNull(catalogName, "catalogName must not be null");
+        Objects.requireNonNull(entryType, "entryType must not be null");
+        if (key == null || key.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return catalog(catalogName).entries().stream()
+                .filter(entryType::isInstance)
+                .map(entryType::cast)
+                .filter(entry -> entry.key().equalsIgnoreCase(key.trim()))
+                .findFirst();
     }
 }
 

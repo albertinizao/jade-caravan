@@ -59,6 +59,69 @@ public record Caravan(
         return beasts.stream().filter(beast -> !beast.countsAsTraveller()).count();
     }
 
+    public BigDecimal totalCargoOccupancy() {
+        return inventoryLots.stream()
+                .map(lot -> lot.quantity().multiply(lot.unitCapacity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<Cart> operativeCarts() {
+        return carts.stream()
+                .filter(Cart::isOperative)
+                .toList();
+    }
+
+    public java.util.Optional<Cart> findCart(UUID cartId) {
+        return carts.stream().filter(cart -> cart.id().equals(cartId)).findFirst();
+    }
+
+    public java.util.Optional<Traveller> findTraveller(UUID travellerId) {
+        return travellers.stream().filter(traveller -> traveller.id().equals(travellerId)).findFirst();
+    }
+
+    public java.util.Optional<Beast> findBeast(UUID beastId) {
+        return beasts.stream().filter(beast -> beast.id().equals(beastId)).findFirst();
+    }
+
+    public java.util.Optional<InventoryLot> findInventoryLot(UUID inventoryLotId) {
+        return inventoryLots.stream().filter(lot -> lot.id().equals(inventoryLotId)).findFirst();
+    }
+
+    public java.util.Optional<CampaignDay> findCampaignDay(UUID campaignDayId) {
+        return campaignDays.stream().filter(day -> day.id().equals(campaignDayId)).findFirst();
+    }
+
+    public Caravan withCurrentDiscontent(BigDecimal newCurrentDiscontent) {
+        DomainValidation.requireNonNegative(newCurrentDiscontent, "newCurrentDiscontent");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                newCurrentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
+    }
+
+    public Caravan adjustDiscontent(BigDecimal delta) {
+        DomainValidation.requireNonNull(delta, "delta");
+        BigDecimal adjustedDiscontent = currentDiscontent.add(delta);
+        if (adjustedDiscontent.signum() < 0) {
+            adjustedDiscontent = BigDecimal.ZERO;
+        }
+        return withCurrentDiscontent(adjustedDiscontent);
+    }
+
     public Caravan withTraveller(Traveller traveller) {
         DomainValidation.requireNonNull(traveller, "traveller");
         ensureSameCaravan(id, traveller.caravanId(), "traveller");

@@ -147,4 +147,54 @@ public record Traveller(
                 roleCapabilities,
                 DomainCollections.append(dailyRoleAssignments, assignment));
     }
+
+    public boolean hasDailyRole(String roleKey, UUID campaignDayId) {
+        return hasDailyRole(roleKey, campaignDayId, null);
+    }
+
+    public boolean hasDailyRole(String roleKey, UUID campaignDayId, UUID targetCartId) {
+        if (roleKey == null || campaignDayId == null) {
+            return false;
+        }
+        String normalizedRoleKey = roleKey.trim();
+        return dailyRoleAssignments.stream()
+                .filter(assignment -> campaignDayId.equals(assignment.campaignDayId()))
+                .filter(assignment -> targetCartId == null || targetCartId.equals(assignment.targetCartId()))
+                .anyMatch(assignment -> assignment.role().key().equalsIgnoreCase(normalizedRoleKey));
+    }
+
+    public boolean isScoutOn(UUID campaignDayId) {
+        return hasDailyRole("SCOUT", campaignDayId);
+    }
+
+    public boolean isTeacherOn(UUID campaignDayId, UUID targetCartId) {
+        return hasDailyRole("TEACHER", campaignDayId, targetCartId);
+    }
+
+    public boolean isFarmerOn(UUID campaignDayId, UUID targetCartId) {
+        return hasDailyRole("FARMER", campaignDayId, targetCartId);
+    }
+
+    public boolean isSlave() {
+        return normalizedStatus().contains("slave")
+                || normalizedContractType().contains("slave")
+                || relations.stream().anyMatch(relation -> relation.relationType() == TravellerRelationType.SLAVE);
+    }
+
+    public boolean isPrisoner() {
+        return normalizedStatus().contains("prison")
+                || normalizedContractType().contains("prison");
+    }
+
+    public boolean isHumanoidCreature() {
+        return humanoid;
+    }
+
+    private String normalizedStatus() {
+        return status == null ? "" : status.trim().toLowerCase();
+    }
+
+    private String normalizedContractType() {
+        return contract == null || contract.contractType() == null ? "" : contract.contractType().trim().toLowerCase();
+    }
 }

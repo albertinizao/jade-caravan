@@ -458,7 +458,10 @@ El repositorio ya dispone de:
 - el catálogo versionado de referencia expuesto por backend en `/api/v1/catalogs/{catalogName}`;
 - el `catalogStore` y el `catalogApi` en frontend para consumir los catálogos sin recalcular reglas;
 - validación y pruebas automatizadas que cubren la carga de catálogos y la respuesta Problem Details cuando un catálogo no existe.
+- el catálogo seed ampliado con los carros normativos de suministro, museo, taller, escuela, huerto, médico, vacío, arcano y adivino, además de la ordenación determinista de resúmenes de catálogo;
 - el modelo de dominio de campaña/caravana materializado en `backend/src/main/java/com/jadecaravan/domain/campaign/`, con `Campaign`, `Caravan`, `CampaignDay`, viajeros, carros, bestias, inventario, comprobaciones, eventos, transacciones y ledger;
+- el motor puro de reglas de negocio en `backend/src/main/java/com/jadecaravan/domain/calculation/`, con validación de capacidad, restricción de carros, tiro, velocidad, consumo, peribles, motín y utilidades de cálculo explicable;
 - pruebas unitarias del dominio que cubren ocupación fraccionaria, validación de estadísticas base, towed beasts que dejan de contar como viajeros, inmutabilidad de días cerrados y trazabilidad de ledger entries.
+- pruebas de cálculo de negocio que cubren exceso de ocupación, conductor ausente, restricciones de museo, consumo de batidores, conversión de suministros, degradación de perecederos, nevera, aislamiento frío, patines de hielo, ruedas mejoradas y umbral de motín.
 
 Este bloque solo refleja el estado técnico vigente para orientar futuras ampliaciones; no sustituye a las reglas anteriores.
