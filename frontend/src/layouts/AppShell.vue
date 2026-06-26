@@ -8,6 +8,7 @@
       <nav class="app-shell__nav" aria-label="Navegación principal">
         <RouterLink to="/">Inicio</RouterLink>
         <RouterLink to="/campaigns/demo/dashboard">Tablero demo</RouterLink>
+        <RouterLink to="/campaigns/demo/rules">Reglas demo</RouterLink>
       </nav>
     </header>
 

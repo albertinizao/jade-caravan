@@ -1,6 +1,9 @@
 package com.jadecaravan.config;
 
 import com.jadecaravan.adapter.out.system.EnvironmentApplicationMetadataAdapter;
+import com.jadecaravan.application.campaign.port.in.CampaignRulesUseCase;
+import com.jadecaravan.application.campaign.port.out.CampaignRulesRepository;
+import com.jadecaravan.application.campaign.service.CampaignRulesApplicationService;
 import com.jadecaravan.application.port.in.ApplicationStatusQuery;
 import com.jadecaravan.application.port.out.ApplicationMetadataPort;
 import com.jadecaravan.application.service.ApplicationStatusService;
@@ -19,5 +22,10 @@ public class ApplicationConfiguration {
     @Bean
     ApplicationStatusQuery applicationStatusQuery(ApplicationMetadataPort applicationMetadataPort) {
         return new ApplicationStatusService(applicationMetadataPort);
+    }
+
+    @Bean
+    CampaignRulesUseCase campaignRulesUseCase(CampaignRulesRepository campaignRulesRepository) {
+        return new CampaignRulesApplicationService(campaignRulesRepository);
     }
 }

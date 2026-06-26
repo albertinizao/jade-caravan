@@ -86,6 +86,10 @@ a {
   gap: 16px;
 }
 
+.muted {
+  color: #6b7280;
+}
+
 .info-card {
   padding: 20px;
   border-radius: 18px;
@@ -107,4 +111,269 @@ a {
 .info-card__help {
   margin: 8px 0 0;
   color: #6b7280;
+}
+
+.rules-page {
+  max-width: 1280px;
+}
+
+.rules-hero,
+.rules-summary,
+.rules-decision-list {
+  display: grid;
+  gap: 16px;
+}
+
+.rules-banner {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+.rules-banner--info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.rules-banner--danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rules-summary__header {
+  display: grid;
+  gap: 4px;
+}
+
+.rules-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.summary-card,
+.decision-card {
+  padding: 20px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.summary-card__label,
+.summary-card__meta,
+.decision-card__key,
+.decision-card__facts dt,
+.field__hint,
+.field__error,
+.decision-card__resolution-label,
+.decision-card__description {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.summary-card__label {
+  color: #6b7280;
+}
+
+.summary-card__value {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.25rem;
+}
+
+.summary-card__meta {
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+.rules-blockers {
+  display: grid;
+  gap: 12px;
+}
+
+.rules-blockers__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-blocker {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.decision-card {
+  display: grid;
+  gap: 16px;
+  border-left: 6px solid transparent;
+}
+
+.decision-card--resolved {
+  border-left-color: #16a34a;
+}
+
+.decision-card--unresolved {
+  border-left-color: #f59e0b;
+}
+
+.decision-card--blocking {
+  outline: 1px solid rgba(220, 38, 38, 0.16);
+}
+
+.decision-card--permissive {
+  outline: 1px solid rgba(22, 163, 74, 0.08);
+}
+
+.decision-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.decision-card__identity {
+  display: grid;
+  gap: 4px;
+}
+
+.decision-card__description {
+  color: #6b7280;
+}
+
+.decision-card__key {
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.decision-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.badge--success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge--danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge--neutral {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.decision-card__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.decision-card__facts div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.decision-card__facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.decision-card__resolution {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.decision-form {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field > span {
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1f2937;
+  font: inherit;
+}
+
+.field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid rgba(29, 78, 216, 0.18);
+  border-color: #2563eb;
+}
+
+.field__hint {
+  color: #6b7280;
+}
+
+.field__error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.decision-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
