@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: jade-caravan-backend
+
+application:
+  version: 0.1.0-SNAPSHOT
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
