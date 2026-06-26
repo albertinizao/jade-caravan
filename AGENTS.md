@@ -133,6 +133,62 @@ frontend/
     types/
 ```
 
+### 4.1 Arquitectura inicial ya materializada
+
+En este repositorio YA existe una base inicial que debe respetarse al ampliar funcionalidad:
+
+```text
+backend/
+  src/main/java/com/jadecaravan/
+    domain/
+      campaign/        # Agregados y reglas nucleares de campaña/caravana.
+      calculation/     # Motor puro de cálculo, validaciones y desgloses.
+      rules/           # Versiones de reglas, decisiones y catálogos.
+    application/
+      campaign/
+        port/in/       # Casos de uso de entrada del contexto de campaña.
+        port/out/      # Puertos hacia persistencia o servicios externos.
+        service/       # Orquestación transaccional del contexto de campaña.
+    adapter/
+      in/web/
+        campaign/      # Controladores HTTP del dominio de campaña.
+        dto/           # DTOs compartidos o transversales.
+        campaign/dto/  # DTOs específicos de campaña.
+      out/
+        persistence/   # Persistencia, JPA, repositorios y mapeadores.
+        system/        # Adaptadores de sistema/entorno.
+    config/            # Wiring explícito de Spring.
+
+frontend/
+  src/
+    modules/
+      campaign/
+        api/           # Cliente HTTP y contratos del módulo campaña.
+        stores/        # Estado de UI del módulo campaña.
+        types/         # Tipos del módulo campaña.
+        views/         # Pantallas enrutables del módulo campaña.
+    views/             # Solo vistas verdaderamente globales.
+    components/        # Componentes reutilizables y presentacionales.
+    layouts/           # Shells y composiciones de página.
+    stores/            # Estado global transversal, no específico de módulo.
+    api/               # Infraestructura HTTP compartida.
+    router/
+    types/             # Tipos globales/transversales.
+```
+
+### 4.2 Reglas de colocación de archivos
+
+Aplica estas reglas al crear código nuevo:
+
+- Una pantalla de dominio no nace en `frontend/src/views`; debe vivir en `frontend/src/modules/<dominio>/views`.
+- Un store de dominio no nace en `frontend/src/stores`; debe vivir en `frontend/src/modules/<dominio>/stores`.
+- `frontend/src/views` queda reservado para vistas globales, shells de navegación o entradas no ligadas a un dominio concreto.
+- `frontend/src/stores` queda reservado para estado global transversal de aplicación.
+- Los casos de uso de campaña deben vivir bajo `backend/src/main/java/com/jadecaravan/application/campaign/...`.
+- Los controladores y DTOs específicos de campaña deben vivir bajo `backend/src/main/java/com/jadecaravan/adapter/in/web/campaign/...`.
+- La persistencia del dominio debe vivir bajo `backend/src/main/java/com/jadecaravan/adapter/out/persistence/...`.
+- No dupliques la misma responsabilidad en una carpeta genérica y otra de módulo; si una pieza pertenece a un dominio, vive en su módulo.
+
 ### Backend
 
 - Java 21.
