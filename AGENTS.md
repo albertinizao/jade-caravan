@@ -458,5 +458,7 @@ El repositorio ya dispone de:
 - el catálogo versionado de referencia expuesto por backend en `/api/v1/catalogs/{catalogName}`;
 - el `catalogStore` y el `catalogApi` en frontend para consumir los catálogos sin recalcular reglas;
 - validación y pruebas automatizadas que cubren la carga de catálogos y la respuesta Problem Details cuando un catálogo no existe.
+- el modelo de dominio de campaña/caravana materializado en `backend/src/main/java/com/jadecaravan/domain/campaign/`, con `Campaign`, `Caravan`, `CampaignDay`, viajeros, carros, bestias, inventario, comprobaciones, eventos, transacciones y ledger;
+- pruebas unitarias del dominio que cubren ocupación fraccionaria, validación de estadísticas base, towed beasts que dejan de contar como viajeros, inmutabilidad de días cerrados y trazabilidad de ledger entries.
 
 Este bloque solo refleja el estado técnico vigente para orientar futuras ampliaciones; no sustituye a las reglas anteriores.
