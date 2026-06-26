@@ -1,6 +1,7 @@
 package com.jadecaravan.domain.campaign;
 
 import com.jadecaravan.domain.catalog.CartTypeCatalogEntry;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -138,5 +139,37 @@ public record Cart(
                 passengerAssignments,
                 cargoAllocations,
                 towingAssignments);
+    }
+
+    public boolean isOperative() {
+        return !destroyed && currentHitPoints > 0;
+    }
+
+    public boolean hasActiveUpgrade(String upgradeKey) {
+        if (upgradeKey == null) {
+            return false;
+        }
+        String normalizedUpgradeKey = upgradeKey.trim();
+        return upgradeInstances.stream()
+                .filter(CartUpgradeInstance::active)
+                .anyMatch(upgradeInstance -> upgradeInstance.upgrade().key().equalsIgnoreCase(normalizedUpgradeKey));
+    }
+
+    public List<CartUpgradeInstance> activeUpgrades() {
+        return upgradeInstances.stream()
+                .filter(CartUpgradeInstance::active)
+                .toList();
+    }
+
+    public BigDecimal assignedPassengerOccupancy() {
+        return passengerAssignments.stream()
+                .map(CartPassengerAssignment::occupancyUnits)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal assignedCargoQuantity() {
+        return cargoAllocations.stream()
+                .map(CartCargoAllocation::quantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

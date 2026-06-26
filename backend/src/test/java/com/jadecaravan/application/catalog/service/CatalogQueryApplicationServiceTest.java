@@ -21,7 +21,7 @@ class CatalogQueryApplicationServiceTest {
         assertThat(summaries).allMatch(summary -> summary.versionId().equals(CatalogRegistry.VERSION_ID));
         assertThat(summaries).anySatisfy(summary -> {
             assertThat(summary.catalogName().pathValue()).isEqualTo("cart-types");
-            assertThat(summary.entryCount()).isEqualTo(11);
+            assertThat(summary.entryCount()).isEqualTo(20);
         });
         assertThat(summaries).anySatisfy(summary -> {
             assertThat(summary.catalogName().pathValue()).isEqualTo("roles");

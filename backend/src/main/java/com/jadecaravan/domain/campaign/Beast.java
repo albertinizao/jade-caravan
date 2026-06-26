@@ -79,4 +79,33 @@ public record Beast(
                 null,
                 notes);
     }
+
+    public Beast withFatigued(boolean newFatigued) {
+        return new Beast(
+                id,
+                caravanId,
+                beastType,
+                name,
+                currentHitPoints,
+                trainedForCombat,
+                newFatigued,
+                activeAsTowing,
+                towingAssignment,
+                notes);
+    }
+
+    public Beast withCurrentHitPoints(int newCurrentHitPoints) {
+        DomainValidation.requireNonNegative(newCurrentHitPoints, "newCurrentHitPoints");
+        return new Beast(
+                id,
+                caravanId,
+                beastType,
+                name,
+                newCurrentHitPoints,
+                trainedForCombat,
+                fatigued,
+                activeAsTowing,
+                towingAssignment,
+                notes);
+    }
 }

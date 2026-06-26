@@ -37,7 +37,7 @@ class CatalogControllerTest {
 
         assertThat(response.catalogName()).isEqualTo("cart-types");
         assertThat(response.versionId()).isEqualTo("catalogs-v1");
-        assertThat(response.entries()).hasSize(11);
+        assertThat(response.entries()).hasSize(20);
         assertThat(response.entries())
                 .anySatisfy(entry -> {
                     assertThat(entry.entryType()).isEqualTo("cart-type");

@@ -32,4 +32,49 @@ public record InventoryLot(
         }
         metadata = DomainCollections.immutableCopy(metadata);
     }
+
+    public InventoryLot withQuantity(BigDecimal newQuantity) {
+        return new InventoryLot(
+                id,
+                caravanId,
+                cargoTypeId,
+                newQuantity,
+                unitCapacity,
+                unitValueCp,
+                cartId,
+                originSettlementId,
+                remainingProvisions,
+                perishableDecayProgress,
+                metadata);
+    }
+
+    public InventoryLot withRemainingProvisions(BigDecimal newRemainingProvisions) {
+        return new InventoryLot(
+                id,
+                caravanId,
+                cargoTypeId,
+                quantity,
+                unitCapacity,
+                unitValueCp,
+                cartId,
+                originSettlementId,
+                newRemainingProvisions,
+                perishableDecayProgress,
+                metadata);
+    }
+
+    public InventoryLot withPerishableDecayProgress(BigDecimal newPerishableDecayProgress) {
+        return new InventoryLot(
+                id,
+                caravanId,
+                cargoTypeId,
+                quantity,
+                unitCapacity,
+                unitValueCp,
+                cartId,
+                originSettlementId,
+                remainingProvisions,
+                newPerishableDecayProgress,
+                metadata);
+    }
 }
