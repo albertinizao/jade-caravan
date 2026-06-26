@@ -2,6 +2,7 @@ package com.jadecaravan.config;
 
 import com.jadecaravan.adapter.out.system.EnvironmentApplicationMetadataAdapter;
 import com.jadecaravan.application.campaign.port.in.CampaignRulesUseCase;
+import com.jadecaravan.application.campaign.port.out.CampaignAuditRepository;
 import com.jadecaravan.application.campaign.port.out.CampaignRulesRepository;
 import com.jadecaravan.application.campaign.service.CampaignRulesApplicationService;
 import com.jadecaravan.application.port.in.ApplicationStatusQuery;
@@ -25,7 +26,14 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    CampaignRulesUseCase campaignRulesUseCase(CampaignRulesRepository campaignRulesRepository) {
-        return new CampaignRulesApplicationService(campaignRulesRepository);
+    CampaignRulesUseCase campaignRulesUseCase(
+            CampaignRulesRepository campaignRulesRepository,
+            CampaignAuditRepository campaignAuditRepository) {
+        return new CampaignRulesApplicationService(campaignRulesRepository, campaignAuditRepository);
+    }
+
+    @Bean
+    com.jadecaravan.application.campaign.port.in.CampaignAuditUseCase campaignAuditUseCase(CampaignAuditRepository campaignAuditRepository) {
+        return new com.jadecaravan.application.campaign.service.CampaignAuditApplicationService(campaignAuditRepository);
     }
 }

@@ -1,12 +1,14 @@
 package com.jadecaravan.adapter.in.web.campaign;
 
 import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleDecisionRequest;
+import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleAuditEntryResponse;
 import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleDecisionResponse;
 import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleGateSummaryResponse;
 import com.jadecaravan.application.campaign.port.in.CampaignRulesUseCase;
 import com.jadecaravan.domain.rules.RuleDecision;
 import com.jadecaravan.domain.rules.RuleDecisionKey;
 import com.jadecaravan.domain.rules.RuleGateSummary;
+import com.jadecaravan.domain.rules.RuleResolutionAuditEntry;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +47,9 @@ public class CampaignRulesController {
                 campaignId,
                 request.decisionKey(),
                 request.reason(),
-                request.configurationValue());
+                request.configurationValue(),
+                request.actor(),
+                request.source());
         return toResponse(resolvedDecision);
     }
 
@@ -53,10 +57,18 @@ public class CampaignRulesController {
     public CampaignRuleGateSummaryResponse getActiveSummary(@PathVariable UUID campaignId) {
         RuleGateSummary summary = campaignRulesUseCase.getActiveSummary(campaignId);
         return new CampaignRuleGateSummaryResponse(
+                summary.ruleSetVersionId(),
                 summary.automationBlocked(),
                 summary.unresolvedDecisions().stream()
                         .map(CampaignRulesController::toResponse)
                         .toList());
+    }
+
+    @GetMapping("/{campaignId}/rules/audit")
+    public List<CampaignRuleAuditEntryResponse> getAuditTrail(@PathVariable UUID campaignId) {
+        return campaignRulesUseCase.getAuditTrail(campaignId).stream()
+                .map(CampaignRulesController::toResponse)
+                .toList();
     }
 
     private static CampaignRuleDecisionResponse toResponse(RuleDecision decision) {
@@ -70,6 +82,22 @@ public class CampaignRulesController {
                 decision.currentResolution(),
                 decision.configurationValue(),
                 decision.reason(),
+                decision.actor(),
+                decision.source(),
+                decision.resolvedAt(),
                 decision.blockingAutomation());
+    }
+
+    private static CampaignRuleAuditEntryResponse toResponse(RuleResolutionAuditEntry entry) {
+        return new CampaignRuleAuditEntryResponse(
+                entry.ruleSetVersionId(),
+                entry.decisionKey(),
+                entry.decisionTitle(),
+                entry.currentResolution(),
+                entry.configurationValue(),
+                entry.reason(),
+                entry.actor(),
+                entry.source(),
+                entry.resolvedAt());
     }
 }

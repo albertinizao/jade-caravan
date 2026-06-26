@@ -12,6 +12,7 @@ vi.mock('../api', () => ({
 
 const unresolvedOverview: CampaignRulesOverview = {
   summary: {
+    ruleSetVersionId: 'decision-gate-v1',
     automationBlocked: true,
     unresolvedBlockers: [
       {
@@ -39,10 +40,28 @@ const unresolvedOverview: CampaignRulesOverview = {
       reason: null,
     },
   ],
+  auditTrail: [
+    {
+      ruleSetVersionId: 'decision-gate-v1',
+      entryType: 'RULE',
+      subjectType: 'RULE_DECISION',
+      subjectId: 'D_05_STOVE_HEAT_SCOPE',
+      operationType: 'RESOLVE_DECISION',
+      decisionKey: 'D_05_STOVE_HEAT_SCOPE',
+      decisionTitle: 'Estufa y ámbito de su calor',
+      currentResolution: 'Acción de campamento sobre viajeros',
+      configurationValue: null,
+      reason: 'Se mantiene como una resolución manual auditable.',
+      actor: 'Director de juego',
+      source: 'Decisión manual de campaña',
+      resolvedAt: '2026-06-26T18:00:00Z',
+    },
+  ],
 };
 
 const resolvedOverview: CampaignRulesOverview = {
   summary: {
+    ruleSetVersionId: 'decision-gate-v1',
     automationBlocked: false,
     unresolvedBlockers: [],
   },
@@ -60,6 +79,7 @@ const resolvedOverview: CampaignRulesOverview = {
       configurationValue: '20',
     },
   ],
+  auditTrail: [],
 };
 
 describe('CampaignRulesView', () => {
@@ -89,6 +109,8 @@ describe('CampaignRulesView', () => {
     expect(wrapper.text()).toContain('Bloquea automatización');
     expect(wrapper.text()).toContain('D-05');
     expect(wrapper.text()).toContain('Estufa y ámbito de su calor');
+    expect(wrapper.text()).toContain('Historial auditable');
+    expect(wrapper.text()).toContain('Versión de reglas');
   });
 
   it('submits a decision resolution and refreshes the view', async () => {
@@ -113,6 +135,9 @@ describe('CampaignRulesView', () => {
 
     await wrapper.get('textarea').setValue('Se usa la opción configurable definida por campaña.');
     await wrapper.get('input[type="text"]').setValue('20');
+    const textInputs = wrapper.findAll('input[type="text"]');
+    await textInputs[1].setValue('Director de juego');
+    await textInputs[2].setValue('Decisión manual de campaña');
     await wrapper.get('form').trigger('submit.prevent');
 
     await flushPromises();
@@ -121,6 +146,8 @@ describe('CampaignRulesView', () => {
       decisionKey: 'D_05_STOVE_HEAT_SCOPE',
       reason: 'Se usa la opción configurable definida por campaña.',
       configurationValue: '20',
+      actor: 'Director de juego',
+      source: 'Decisión manual de campaña',
     });
     expect(wrapper.text()).toContain('Resolución registrada');
     expect(wrapper.text()).toContain('Resuelta');

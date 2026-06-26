@@ -3,11 +3,14 @@ package com.jadecaravan.application.campaign.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jadecaravan.application.campaign.port.out.CampaignRulesRepository;
+import com.jadecaravan.application.campaign.port.out.CampaignAuditRepository;
+import com.jadecaravan.domain.campaign.CampaignAuditEntry;
 import com.jadecaravan.domain.rules.CampaignRuleState;
 import com.jadecaravan.domain.rules.RuleDecision;
 import com.jadecaravan.domain.rules.RuleDecisionKey;
 import com.jadecaravan.domain.rules.RuleDecisionStatus;
 import com.jadecaravan.domain.rules.RuleGateSummary;
+import com.jadecaravan.domain.rules.RuleResolutionAuditEntry;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +21,8 @@ import org.junit.jupiter.api.Test;
 class CampaignRulesApplicationServiceTest {
 
     private final CampaignRulesRepository repository = new InMemoryCampaignRulesRepository();
-    private final CampaignRulesApplicationService service = new CampaignRulesApplicationService(repository);
+    private final CampaignAuditRepository auditRepository = new InMemoryCampaignAuditRepository();
+    private final CampaignRulesApplicationService service = new CampaignRulesApplicationService(repository, auditRepository);
 
     @Test
     void seedsFourteenDecisionsAndPreservesTheDocumentedResolution() {
@@ -42,6 +46,7 @@ class CampaignRulesApplicationServiceTest {
 
     private static final class InMemoryCampaignRulesRepository implements CampaignRulesRepository {
         private final ConcurrentMap<UUID, CampaignRuleState> states = new ConcurrentHashMap<>();
+        private final ConcurrentMap<UUID, List<RuleResolutionAuditEntry>> auditTrails = new ConcurrentHashMap<>();
 
         @Override
         public CampaignRuleState loadOrCreate(UUID campaignId) {
@@ -51,6 +56,32 @@ class CampaignRulesApplicationServiceTest {
         @Override
         public void save(CampaignRuleState state) {
             states.put(state.campaignId(), state);
+        }
+
+        @Override
+        public void appendAuditEntry(RuleResolutionAuditEntry entry) {
+            auditTrails.computeIfAbsent(entry.campaignId(), ignored -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                    .add(entry);
+        }
+
+        @Override
+        public List<RuleResolutionAuditEntry> loadAuditTrail(UUID campaignId) {
+            return List.copyOf(auditTrails.getOrDefault(campaignId, List.of()));
+        }
+    }
+
+    private static final class InMemoryCampaignAuditRepository implements CampaignAuditRepository {
+        private final ConcurrentMap<UUID, List<CampaignAuditEntry>> trails = new ConcurrentHashMap<>();
+
+        @Override
+        public void append(CampaignAuditEntry entry) {
+            trails.computeIfAbsent(entry.campaignId(), ignored -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                    .add(entry);
+        }
+
+        @Override
+        public List<CampaignAuditEntry> loadTrail(UUID campaignId) {
+            return List.copyOf(trails.getOrDefault(campaignId, List.of()));
         }
     }
 
@@ -62,15 +93,22 @@ class CampaignRulesApplicationServiceTest {
                 campaignId,
                 RuleDecisionKey.D_01_EXTENDED_SPACE_ROUNDING,
                 "Use ceiling rounding for the campaign rule set.",
-                "ceil(capacidadBase × 25%)");
+                "ceil(capacidadBase × 25%)",
+                "Director de juego",
+                "Decisión manual de campaña");
 
         assertThat(resolvedDecision.status()).isEqualTo(RuleDecisionStatus.RESOLVED);
         assertThat(resolvedDecision.currentResolution()).isEqualTo("ceil(capacidadBase × 25%)");
         assertThat(resolvedDecision.configurationValue()).isEqualTo("ceil(capacidadBase × 25%)");
         assertThat(resolvedDecision.reason()).isEqualTo("Use ceiling rounding for the campaign rule set.");
+        assertThat(resolvedDecision.actor()).isEqualTo("Director de juego");
+        assertThat(resolvedDecision.source()).isEqualTo("Decisión manual de campaña");
 
         RuleGateSummary summary = service.getActiveSummary(campaignId);
         assertThat(summary.automationBlocked()).isTrue();
         assertThat(summary.unresolvedDecisions()).hasSize(12);
+
+        assertThat(service.getAuditTrail(campaignId)).hasSize(1);
+        assertThat(auditRepository.loadTrail(campaignId)).hasSize(1);
     }
 }

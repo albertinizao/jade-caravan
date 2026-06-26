@@ -18,6 +18,7 @@ describe('useCampaignRulesStore', () => {
   it('loads the overview and exposes unresolved blockers', async () => {
     const overview: CampaignRulesOverview = {
       summary: {
+        ruleSetVersionId: 'decision-gate-v1',
         automationBlocked: true,
         unresolvedBlockers: [
           {
@@ -45,6 +46,23 @@ describe('useCampaignRulesStore', () => {
           reason: null,
         },
       ],
+      auditTrail: [
+        {
+          ruleSetVersionId: 'decision-gate-v1',
+          entryType: 'RULE',
+          subjectType: 'RULE_DECISION',
+          subjectId: 'D_05_STOVE_HEAT_SCOPE',
+          operationType: 'RESOLVE_DECISION',
+          decisionKey: 'D_05_STOVE_HEAT_SCOPE',
+          decisionTitle: 'Estufa y ámbito de su calor',
+          currentResolution: 'Acción de campamento sobre viajeros',
+          configurationValue: null,
+          reason: 'Se mantiene como una resolución manual auditable.',
+          actor: 'Director de juego',
+          source: 'Decisión manual de campaña',
+          resolvedAt: '2026-06-26T18:00:00Z',
+        },
+      ],
     };
 
     vi.mocked(getCampaignRulesOverview).mockResolvedValue(overview);
@@ -61,6 +79,7 @@ describe('useCampaignRulesStore', () => {
   it('resolves a decision and reloads the overview', async () => {
     const initialOverview: CampaignRulesOverview = {
       summary: {
+        ruleSetVersionId: 'decision-gate-v1',
         automationBlocked: true,
         unresolvedBlockers: [],
       },
@@ -77,10 +96,12 @@ describe('useCampaignRulesStore', () => {
           reason: null,
         },
       ],
+      auditTrail: [],
     };
 
     const resolvedOverview: CampaignRulesOverview = {
       summary: {
+        ruleSetVersionId: 'decision-gate-v1',
         automationBlocked: false,
         unresolvedBlockers: [],
       },
@@ -98,6 +119,7 @@ describe('useCampaignRulesStore', () => {
           configurationValue: '-1',
         },
       ],
+      auditTrail: [],
     };
 
     vi.mocked(resolveCampaignDecision).mockResolvedValue(undefined);
@@ -112,12 +134,16 @@ describe('useCampaignRulesStore', () => {
       decisionKey: 'D-07',
       reason: 'Se adopta la penalización configurada para esta campaña.',
       configurationValue: '-1',
+      actor: 'Director de juego',
+      source: 'Decisión manual de campaña',
     });
 
     expect(resolveCampaignDecision).toHaveBeenCalledWith('demo', {
       decisionKey: 'D-07',
       reason: 'Se adopta la penalización configurada para esta campaña.',
       configurationValue: '-1',
+      actor: 'Director de juego',
+      source: 'Decisión manual de campaña',
     });
     expect(store.decisionGateItems[0]?.resolutionState).toBe('resolved');
     expect(store.decisionGateItems[0]?.reason).toContain('penalización configurada');
