@@ -2,6 +2,7 @@ import { httpClient } from '@/api/httpClient';
 import type {
   CampaignRulesOverview,
   DecisionGateBlockerSummary,
+  CampaignRuleAuditEntry,
   DecisionGateItem,
   ResolveDecisionGateRequest,
 } from '../types';
@@ -15,12 +16,32 @@ interface CampaignRuleDecisionResponseDto {
   currentResolution: string | null;
   configurationValue: string | null;
   reason: string | null;
+  actor: string | null;
+  source: string | null;
+  resolvedAt: string | null;
   blockingAutomation: boolean;
 }
 
 interface CampaignRuleGateSummaryResponseDto {
+  ruleSetVersionId: string;
   automationBlocked: boolean;
   unresolvedDecisions: CampaignRuleDecisionResponseDto[];
+}
+
+interface CampaignRuleAuditEntryResponseDto {
+  ruleSetVersionId: string;
+  entryType: string;
+  subjectType: string;
+  subjectId: string | null;
+  operationType: string;
+  decisionKey: string;
+  title: string;
+  currentResolution: string;
+  configurationValue: string | null;
+  reason: string;
+  actor: string;
+  source: string;
+  resolvedAt: string;
 }
 
 function formatDecisionKey(decisionKey: string): string {
@@ -45,6 +66,27 @@ function mapDecision(dto: CampaignRuleDecisionResponseDto): DecisionGateItem {
     resolvedReason: dto.reason ?? undefined,
     configurationValue: dto.configurationValue,
     reason: dto.reason,
+    actor: dto.actor,
+    source: dto.source,
+    resolvedAt: dto.resolvedAt,
+  };
+}
+
+function mapAuditEntry(dto: CampaignRuleAuditEntryResponseDto): CampaignRuleAuditEntry {
+  return {
+    ruleSetVersionId: dto.ruleSetVersionId,
+    entryType: dto.entryType,
+    subjectType: dto.subjectType,
+    subjectId: dto.subjectId,
+    operationType: dto.operationType,
+    decisionKey: dto.decisionKey,
+    decisionTitle: dto.title,
+    currentResolution: dto.currentResolution,
+    configurationValue: dto.configurationValue,
+    reason: dto.reason,
+    actor: dto.actor,
+    source: dto.source,
+    resolvedAt: dto.resolvedAt,
   };
 }
 
@@ -62,17 +104,20 @@ function mapBlocker(dto: CampaignRuleDecisionResponseDto): DecisionGateBlockerSu
 }
 
 export async function getCampaignRulesOverview(campaignId: string): Promise<CampaignRulesOverview> {
-  const [summary, decisions] = await Promise.all([
+  const [summary, decisions, auditTrail] = await Promise.all([
     httpClient.get<CampaignRuleGateSummaryResponseDto>(`/campaigns/${campaignId}/rules/active`),
     httpClient.get<CampaignRuleDecisionResponseDto[]>(`/campaigns/${campaignId}/rules/decisions`),
+    httpClient.get<CampaignRuleAuditEntryResponseDto[]>(`/campaigns/${campaignId}/audit`),
   ]);
 
   return {
     summary: {
+      ruleSetVersionId: summary.ruleSetVersionId,
       automationBlocked: summary.automationBlocked,
       unresolvedBlockers: summary.unresolvedDecisions.map(mapBlocker),
     },
     decisionGateItems: decisions.map(mapDecision),
+    auditTrail: auditTrail.map(mapAuditEntry),
   };
 }
 

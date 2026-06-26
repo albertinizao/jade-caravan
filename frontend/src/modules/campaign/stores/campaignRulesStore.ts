@@ -29,6 +29,7 @@ export const useCampaignRulesStore = defineStore('campaignRules', {
   getters: {
     decisionGateItems: (state) => state.overview?.decisionGateItems ?? [],
     summary: (state) => state.overview?.summary ?? null,
+    auditTrail: (state) => state.overview?.auditTrail ?? [],
     unresolvedBlockers: (state) =>
       state.overview?.summary.unresolvedBlockers ??
       (state.overview?.decisionGateItems ?? [])

@@ -29,7 +29,9 @@ class CampaignRulesPersistenceTest {
                 campaignId,
                 RuleDecisionKey.D_02_TOWING_BONUS_STACKING,
                 "Persist the campaign decision in the database.",
-                "+4 per installed towing tier");
+                "+4 per installed towing tier",
+                "Director de juego",
+                "Decisión manual de campaña");
 
         entityManager.clear();
 
@@ -42,5 +44,6 @@ class CampaignRulesPersistenceTest {
         assertThat(reloadedDecision.status().name()).isEqualTo("RESOLVED");
         assertThat(reloadedDecision.currentResolution()).isEqualTo("+4 per installed towing tier");
         assertThat(reloadedDecision.reason()).isEqualTo("Persist the campaign decision in the database.");
+        assertThat(service.getAuditTrail(campaignId)).hasSizeGreaterThanOrEqualTo(1);
     }
 }

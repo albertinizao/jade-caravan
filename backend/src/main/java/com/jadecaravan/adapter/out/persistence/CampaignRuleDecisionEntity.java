@@ -45,6 +45,12 @@ public class CampaignRuleDecisionEntity {
     @Column(name = "reason", length = 4000)
     private String reason;
 
+    @Column(name = "actor", length = 255)
+    private String actor;
+
+    @Column(name = "source", length = 255)
+    private String source;
+
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
@@ -59,6 +65,8 @@ public class CampaignRuleDecisionEntity {
             String currentResolution,
             String configurationValue,
             String reason,
+            String actor,
+            String source,
             Instant resolvedAt) {
         this.campaignRuleState = Objects.requireNonNull(campaignRuleState, "campaignRuleState must not be null");
         this.decisionKey = Objects.requireNonNull(decisionKey, "decisionKey must not be null");
@@ -67,6 +75,8 @@ public class CampaignRuleDecisionEntity {
         this.currentResolution = currentResolution;
         this.configurationValue = configurationValue;
         this.reason = reason;
+        this.actor = actor;
+        this.source = source;
         this.resolvedAt = resolvedAt;
     }
 
@@ -82,6 +92,8 @@ public class CampaignRuleDecisionEntity {
                 decision.currentResolution(),
                 decision.configurationValue(),
                 decision.reason(),
+                decision.actor(),
+                decision.source(),
                 decision.resolvedAt());
     }
 
@@ -91,6 +103,8 @@ public class CampaignRuleDecisionEntity {
         this.currentResolution = decision.currentResolution();
         this.configurationValue = decision.configurationValue();
         this.reason = decision.reason();
+        this.actor = decision.actor();
+        this.source = decision.source();
         this.resolvedAt = decision.resolvedAt();
     }
 
@@ -100,7 +114,7 @@ public class CampaignRuleDecisionEntity {
         if (decisionStatus == RuleDecisionStatus.PENDING) {
             return RuleDecision.pending(key);
         }
-        return RuleDecision.resolved(key, currentResolution, configurationValue, reason, resolvedAt);
+        return RuleDecision.resolved(key, currentResolution, configurationValue, reason, actor, source, resolvedAt);
     }
 
     public String decisionKey() {

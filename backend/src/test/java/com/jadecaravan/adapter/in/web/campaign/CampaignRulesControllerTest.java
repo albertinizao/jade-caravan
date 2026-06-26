@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleDecisionRequest;
+import com.jadecaravan.adapter.in.web.campaign.dto.CampaignAuditEntryResponse;
+import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleAuditEntryResponse;
 import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleDecisionResponse;
 import com.jadecaravan.adapter.in.web.campaign.dto.CampaignRuleGateSummaryResponse;
 import com.jadecaravan.domain.rules.RuleDecisionKey;
@@ -56,7 +58,9 @@ class CampaignRulesControllerTest {
         CampaignRuleDecisionRequest request = new CampaignRuleDecisionRequest(
                 RuleDecisionKey.D_02_TOWING_BONUS_STACKING,
                 "Align the stacking rule with campaign guidance.",
-                "+4 per installed towing tier");
+                "+4 per installed towing tier",
+                "Director de juego",
+                "Decisión manual de campaña");
 
         String resolvedJson = mockMvc.perform(post("/api/v1/campaigns/{campaignId}/rules/decisions", campaignId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,6 +77,8 @@ class CampaignRulesControllerTest {
         assertThat(resolvedDecision.status()).isEqualTo(RuleDecisionStatus.RESOLVED);
         assertThat(resolvedDecision.currentResolution()).isEqualTo("+4 per installed towing tier");
         assertThat(resolvedDecision.configurationValue()).isEqualTo("+4 per installed towing tier");
+        assertThat(resolvedDecision.actor()).isEqualTo("Director de juego");
+        assertThat(resolvedDecision.source()).isEqualTo("Decisión manual de campaña");
 
         String activeJson = mockMvc.perform(get("/api/v1/campaigns/{campaignId}/rules/active", campaignId))
                 .andExpect(status().isOk())
@@ -83,7 +89,32 @@ class CampaignRulesControllerTest {
                 activeJson,
                 CampaignRuleGateSummaryResponse.class);
 
+        assertThat(summary.ruleSetVersionId()).isEqualTo("decision-gate-v1");
         assertThat(summary.automationBlocked()).isTrue();
         assertThat(summary.unresolvedDecisions()).hasSize(12);
+
+        String campaignAuditJson = mockMvc.perform(get("/api/v1/campaigns/{campaignId}/audit", campaignId))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<CampaignAuditEntryResponse> campaignAudits = objectMapper.readValue(
+                campaignAuditJson,
+                new TypeReference<>() {
+                });
+        assertThat(campaignAudits).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(campaignAudits.get(campaignAudits.size() - 1).entryType()).isEqualTo("RULE");
+
+        String auditJson = mockMvc.perform(get("/api/v1/campaigns/{campaignId}/rules/audit", campaignId))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<CampaignRuleAuditEntryResponse> audits = objectMapper.readValue(
+                auditJson,
+                new TypeReference<>() {
+                });
+        assertThat(audits).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(audits.get(audits.size() - 1).decisionKey()).isEqualTo(RuleDecisionKey.D_02_TOWING_BONUS_STACKING);
     }
 }

@@ -57,6 +57,11 @@
             <strong class="summary-card__value">{{ resolvedCount }}</strong>
             <p class="summary-card__meta">Decisiones ya registradas con motivo.</p>
           </article>
+          <article class="summary-card">
+            <p class="summary-card__label">Versión de reglas</p>
+            <strong class="summary-card__value">{{ rulesStore.summary.ruleSetVersionId }}</strong>
+            <p class="summary-card__meta">Versión histórica activa para esta campaña.</p>
+          </article>
         </div>
 
         <div class="rules-blockers">
@@ -125,6 +130,15 @@
             <p class="muted">
               <strong>Motivo:</strong> {{ item.reason ?? item.resolvedReason ?? 'Sin motivo guardado' }}
             </p>
+            <p class="muted" v-if="item.actor">
+              <strong>Actor:</strong> {{ item.actor }}
+            </p>
+            <p class="muted" v-if="item.source">
+              <strong>Fuente:</strong> {{ item.source }}
+            </p>
+            <p class="muted" v-if="item.resolvedAt">
+              <strong>Fecha:</strong> {{ item.resolvedAt }}
+            </p>
             <p class="muted" v-if="item.configurationValue !== undefined && item.configurationValue !== null">
               <strong>Valor de configuración:</strong> {{ item.configurationValue }}
             </p>
@@ -155,6 +169,28 @@
                 />
                 <small class="field__hint">Solo si la decisión necesita un parámetro visible.</small>
               </label>
+
+              <label class="field" :for="`actor-${item.decisionKey}`">
+                <span>Actor</span>
+                <input
+                  :id="`actor-${item.decisionKey}`"
+                  v-model="getDraft(item.decisionKey).actor"
+                  type="text"
+                  placeholder="Director de juego"
+                />
+                <small class="field__hint">Se guarda para la trazabilidad auditable.</small>
+              </label>
+
+              <label class="field" :for="`source-${item.decisionKey}`">
+                <span>Fuente</span>
+                <input
+                  :id="`source-${item.decisionKey}`"
+                  v-model="getDraft(item.decisionKey).source"
+                  type="text"
+                  placeholder="Decisión manual de campaña"
+                />
+                <small class="field__hint">Describe de dónde sale la resolución.</small>
+              </label>
             </div>
 
             <div class="decision-form__actions">
@@ -164,6 +200,34 @@
             </div>
           </form>
         </article>
+      </section>
+
+      <section v-if="auditTrail.length > 0" class="rules-audit" aria-labelledby="audit-trail-title">
+        <div class="rules-summary__header">
+          <h3 id="audit-trail-title">Historial auditable</h3>
+          <p class="muted">
+            Cada resolución queda como registro inmutable con actor, fuente, versión y momento de resolución.
+          </p>
+        </div>
+
+        <ul class="rules-audit__list">
+          <li
+            v-for="entry in auditTrail"
+            :key="`${entry.ruleSetVersionId}-${entry.decisionKey}-${entry.resolvedAt}`"
+            class="rules-audit__item"
+          >
+            <strong>{{ entry.decisionKey }} · {{ entry.decisionTitle }}</strong>
+            <p class="muted">
+              {{ entry.entryType }} · {{ entry.operationType }} · {{ entry.subjectType }}
+              <span v-if="entry.subjectId">· {{ entry.subjectId }}</span>
+            </p>
+            <p class="muted">{{ entry.currentResolution }}</p>
+            <p class="muted">{{ entry.reason }}</p>
+            <p class="muted">
+              {{ entry.actor }} · {{ entry.source }} · {{ entry.ruleSetVersionId }} · {{ entry.resolvedAt }}
+            </p>
+          </li>
+        </ul>
       </section>
     </section>
   </AppShell>
@@ -182,6 +246,8 @@ interface CampaignRulesViewProps {
 interface DecisionDraft {
   reason: string;
   configurationValue: string;
+  actor: string;
+  source: string;
 }
 
 const props = defineProps<CampaignRulesViewProps>();
@@ -193,6 +259,7 @@ const draftErrors = reactive<Record<string, string>>({});
 
 const decisionGateItems = computed(() => rulesStore.decisionGateItems);
 const unresolvedBlockers = computed(() => rulesStore.unresolvedBlockers);
+const auditTrail = computed(() => rulesStore.auditTrail);
 const resolvedCount = computed(
   () => decisionGateItems.value.filter((item) => item.resolutionState === 'resolved').length,
 );
@@ -201,6 +268,8 @@ function getDraft(key: string): DecisionDraft {
   decisionDrafts[key] ??= {
     reason: '',
     configurationValue: '',
+    actor: 'Director de juego',
+    source: 'Decisión manual de campaña',
   };
 
   return decisionDrafts[key];
@@ -248,12 +317,24 @@ async function submitDecision(item: DecisionGateItem) {
     request.configurationValue = configurationValue;
   }
 
+  const actor = draft.actor.trim();
+  if (actor) {
+    request.actor = actor;
+  }
+
+  const source = draft.source.trim();
+  if (source) {
+    request.source = source;
+  }
+
   try {
     await rulesStore.resolveDecision(campaignId.value, request);
 
     decisionDrafts[item.decisionKey] = {
       reason: '',
       configurationValue: '',
+      actor: 'Director de juego',
+      source: 'Decisión manual de campaña',
     };
     draftErrors[item.decisionKey] = '';
   } catch {

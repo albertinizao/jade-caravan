@@ -62,7 +62,9 @@ public final class CampaignRuleState {
     public synchronized RuleDecision resolveDecision(
             RuleDecisionKey key,
             String reason,
-            String configurationValue) {
+            String configurationValue,
+            String actor,
+            String source) {
         RuleDecision existingDecision = decision(key);
         String normalizedConfigurationValue = normalize(configurationValue);
         String effectiveResolution = normalizedConfigurationValue != null
@@ -71,7 +73,9 @@ public final class CampaignRuleState {
         RuleDecision resolvedDecision = existingDecision.resolve(
                 effectiveResolution,
                 normalizedConfigurationValue,
-                reason);
+                reason,
+                normalizeOrDefault(actor, "Dirección de juego"),
+                normalizeOrDefault(source, "Decisión manual de campaña"));
         decisions.put(key, resolvedDecision);
         return resolvedDecision;
     }
@@ -80,7 +84,7 @@ public final class CampaignRuleState {
         List<RuleDecision> unresolvedDecisions = decisions.values().stream()
                 .filter(RuleDecision::blockingAutomation)
                 .toList();
-        return new RuleGateSummary(!unresolvedDecisions.isEmpty(), unresolvedDecisions);
+        return new RuleGateSummary(ruleSetVersionId, !unresolvedDecisions.isEmpty(), unresolvedDecisions);
     }
 
     private static String normalize(String value) {
@@ -89,5 +93,10 @@ public final class CampaignRuleState {
         }
         String trimmedValue = value.trim();
         return trimmedValue.isEmpty() ? null : trimmedValue;
+    }
+
+    private static String normalizeOrDefault(String value, String defaultValue) {
+        String normalized = normalize(value);
+        return normalized != null ? normalized : defaultValue;
     }
 }
