@@ -5,6 +5,23 @@ spring:
 application:
   version: 0.1.0-SNAPSHOT
 
+spring:
+  datasource:
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/jade_caravan}
+    username: ${JDBC_DATABASE_USERNAME:jade_caravan}
+    password: ${JDBC_DATABASE_PASSWORD:jade_caravan}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+
 server:
   error:
     include-message: always
