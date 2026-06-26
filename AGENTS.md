@@ -449,3 +449,14 @@ Una tarea está terminada únicamente cuando:
 - no queda una ambigüedad nueva escondida en código.
 
 Cuando haya duda, prioriza siempre: **fidelidad a las reglas de campaña, trazabilidad y claridad para el director de juego**.
+
+## 17. Estado actual del proyecto
+
+El repositorio ya dispone de:
+
+- la base de decisión de reglas y auditoría de campaña;
+- el catálogo versionado de referencia expuesto por backend en `/api/v1/catalogs/{catalogName}`;
+- el `catalogStore` y el `catalogApi` en frontend para consumir los catálogos sin recalcular reglas;
+- validación y pruebas automatizadas que cubren la carga de catálogos y la respuesta Problem Details cuando un catálogo no existe.
+
+Este bloque solo refleja el estado técnico vigente para orientar futuras ampliaciones; no sustituye a las reglas anteriores.

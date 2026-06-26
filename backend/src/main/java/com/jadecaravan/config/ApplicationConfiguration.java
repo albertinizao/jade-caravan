@@ -1,6 +1,9 @@
 package com.jadecaravan.config;
 
+import com.jadecaravan.application.catalog.port.in.CatalogQueryUseCase;
+import com.jadecaravan.application.catalog.service.CatalogQueryApplicationService;
 import com.jadecaravan.adapter.out.system.EnvironmentApplicationMetadataAdapter;
+import com.jadecaravan.domain.catalog.CatalogRegistry;
 import com.jadecaravan.application.campaign.port.in.CampaignRulesUseCase;
 import com.jadecaravan.application.campaign.port.out.CampaignAuditRepository;
 import com.jadecaravan.application.campaign.port.out.CampaignRulesRepository;
@@ -35,5 +38,15 @@ public class ApplicationConfiguration {
     @Bean
     com.jadecaravan.application.campaign.port.in.CampaignAuditUseCase campaignAuditUseCase(CampaignAuditRepository campaignAuditRepository) {
         return new com.jadecaravan.application.campaign.service.CampaignAuditApplicationService(campaignAuditRepository);
+    }
+
+    @Bean
+    CatalogRegistry catalogRegistry() {
+        return CatalogRegistry.seeded();
+    }
+
+    @Bean
+    CatalogQueryUseCase catalogQueryUseCase(CatalogRegistry catalogRegistry) {
+        return new CatalogQueryApplicationService(catalogRegistry);
     }
 }
