@@ -1,6 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
-import { CampaignDashboardView, CampaignDailyCycleView, CampaignRulesView } from '@/modules/campaign/views';
+import {
+  CampaignBeastsView,
+  CampaignCartsView,
+  CampaignCommerceView,
+  CampaignDashboardView,
+  CampaignDailyCycleView,
+  CampaignHistoryView,
+  CampaignInventoryView,
+  CampaignRulesView,
+  CampaignTravellersView,
+} from '@/modules/campaign/views';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,6 +20,42 @@ const router = createRouter({
       path: '/campaigns/:campaignId/dashboard',
       name: 'campaign-dashboard',
       component: CampaignDashboardView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/carts',
+      name: 'campaign-carts',
+      component: CampaignCartsView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/travellers',
+      name: 'campaign-travellers',
+      component: CampaignTravellersView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/inventory',
+      name: 'campaign-inventory',
+      component: CampaignInventoryView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/beasts',
+      name: 'campaign-beasts',
+      component: CampaignBeastsView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/commerce',
+      name: 'campaign-commerce',
+      component: CampaignCommerceView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/history',
+      name: 'campaign-history',
+      component: CampaignHistoryView,
       props: true,
     },
     {

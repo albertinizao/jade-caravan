@@ -236,7 +236,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
 import AppShell from '@/layouts/AppShell.vue';
-import { useCampaignRulesStore } from '../stores';
+import { useCampaignRulesStore, useCampaignStore } from '../stores';
 import type { DecisionGateItem, ResolveDecisionGateRequest } from '../types';
 
 interface CampaignRulesViewProps {
@@ -253,6 +253,7 @@ interface DecisionDraft {
 const props = defineProps<CampaignRulesViewProps>();
 const campaignId = computed(() => props.campaignId ?? 'demo');
 const rulesStore = useCampaignRulesStore();
+const campaignStore = useCampaignStore();
 
 const decisionDrafts = reactive<Record<string, DecisionDraft>>({});
 const draftErrors = reactive<Record<string, string>>({});
@@ -346,6 +347,7 @@ watch(
   campaignId,
   async (nextCampaignId) => {
     try {
+      campaignStore.selectCampaign(nextCampaignId);
       await rulesStore.loadCampaignRules(nextCampaignId);
     } catch {
       // The store already captured the error state; keep the view mounted.

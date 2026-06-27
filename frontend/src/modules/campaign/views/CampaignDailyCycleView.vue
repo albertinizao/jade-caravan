@@ -354,7 +354,7 @@
 import { computed, reactive, watch } from 'vue';
 import AppShell from '@/layouts/AppShell.vue';
 import { useCatalogStore } from '@/stores';
-import { useCampaignDailyCycleStore } from '../stores';
+import { useCampaignDailyCycleStore, useCampaignStore } from '../stores';
 import type {
   CampaignDay,
   CampaignDayCloseRequest,
@@ -409,6 +409,7 @@ const props = defineProps<CampaignDailyCycleViewProps>();
 const campaignId = computed(() => props.campaignId ?? 'demo');
 const store = useCampaignDailyCycleStore();
 const catalogStore = useCatalogStore();
+const campaignStore = useCampaignStore();
 
 const dayDraft = reactive<DayDraft>({
   dayNumber: '1',
@@ -663,6 +664,7 @@ watch(
   campaignId,
   async (nextCampaignId) => {
     try {
+      campaignStore.selectCampaign(nextCampaignId);
       await catalogStore.loadAllCatalogs();
       await store.loadCampaignDailyCycle(nextCampaignId);
       refreshDraftsFromState();
