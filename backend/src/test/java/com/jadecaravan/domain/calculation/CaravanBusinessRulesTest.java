@@ -220,6 +220,19 @@ class CaravanBusinessRulesTest {
     }
 
     @Test
+    void armouredCartRaisesRequiredTowingStrength() {
+        Cart cart = cart(
+                customCartType("ARMOURED_CART", "Armoured cart", 1, 4, 10, 1, 1, 1, 1),
+                List.of(upgradeInstance("ARMOURED")),
+                List.of(),
+                List.of());
+
+        BigDecimal required = CaravanBusinessRules.requiredTowingStrengthForCart(cart, TravelContext.empty());
+
+        assertEquals(new BigDecimal("20"), required);
+    }
+
+    @Test
     void mutinyTriggersAtEquality() {
         Caravan caravan = caravan(List.of(), List.of(), List.of(), List.of(), 1).withCurrentDiscontent(new BigDecimal("5"));
 
