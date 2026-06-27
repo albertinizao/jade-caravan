@@ -462,7 +462,10 @@ El repositorio ya dispone de:
 - el modelo de dominio de campaña/caravana materializado en `backend/src/main/java/com/jadecaravan/domain/campaign/`, con `Campaign`, `Caravan`, `CampaignDay`, viajeros, carros, bestias, inventario, comprobaciones, eventos, transacciones y ledger;
 - el motor puro de reglas de negocio en `backend/src/main/java/com/jadecaravan/domain/calculation/`, con validación de capacidad, restricción de carros, tiro, velocidad, consumo, peribles, motín y utilidades de cálculo explicable;
 - el servicio de cálculo de alto nivel en `backend/src/main/java/com/jadecaravan/domain/calculation/CaravanCalculationService.java`, con contexto explícito para dotes, asentamiento y terreno, y con desglose estable para carros efectivos, consumo diario, velocidad, modificadores de rol, descontento por evento y resumen de caravana;
+- el ciclo diario ya está materializado de forma operativa en backend: `CampaignDailyCycleState`, `CampaignDaySummary`, `CampaignDayPreview`, el `CampaignDailyCycleApplicationService`, su controlador REST y la persistencia con snapshot JSON en `campaign_daily_cycle_state` (Flyway V4), incluyendo planificación, preview, cierre y reapertura auditada;
+- el frontend ya expone la vista de ciclo diario en `/campaigns/:campaignId/day-cycle`, con store y cliente HTTP propios, reutilizando catálogos para asignaciones de roles y mostrando preview, resumen y cierre desde backend;
 - pruebas unitarias del dominio que cubren ocupación fraccionaria, validación de estadísticas base, towed beasts que dejan de contar como viajeros, inmutabilidad de días cerrados y trazabilidad de ledger entries.
 - pruebas de cálculo de negocio que cubren exceso de ocupación, conductor ausente, restricciones de museo, consumo de batidores, conversión de suministros, degradación de perecederos, nevera, aislamiento frío, patines de hielo, ruedas mejoradas y umbral de motín.
+- pruebas del ciclo diario que cubren estado semilla, preview determinista, cierre y reapertura auditada.
 
 Este bloque solo refleja el estado técnico vigente para orientar futuras ampliaciones; no sustituye a las reglas anteriores.

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
-import { CampaignDashboardView, CampaignRulesView } from '@/modules/campaign/views';
+import { CampaignDashboardView, CampaignDailyCycleView, CampaignRulesView } from '@/modules/campaign/views';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -16,6 +16,12 @@ const router = createRouter({
       path: '/campaigns/:campaignId/rules',
       name: 'campaign-rules',
       component: CampaignRulesView,
+      props: true,
+    },
+    {
+      path: '/campaigns/:campaignId/day-cycle',
+      name: 'campaign-day-cycle',
+      component: CampaignDailyCycleView,
       props: true,
     },
   ],

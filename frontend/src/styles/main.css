@@ -141,6 +141,23 @@ a {
   color: #991b1b;
 }
 
+.banner {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+.banner--info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.banner--danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .rules-summary__header {
   display: grid;
   gap: 4px;
@@ -376,4 +393,129 @@ a {
 .button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.dashboard-link {
+  margin: 0;
+}
+
+.daily-cycle-page {
+  max-width: 1320px;
+}
+
+.daily-cycle-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.panel {
+  padding: 20px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 16px;
+}
+
+.panel__header,
+.actions-inline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.facts-grid,
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.facts-grid dt,
+.facts-grid dd {
+  margin: 0;
+}
+
+.facts-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.form-grid--compact {
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  font: inherit;
+  color: #111827;
+}
+
+.field textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+.field--inline {
+  align-content: end;
+}
+
+.assignment-block {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.assignment-block h4,
+.alerts-list h4 {
+  margin: 0;
+}
+
+.preview-grid {
+  margin-top: 8px;
+}
+
+.alerts-list {
+  display: grid;
+  gap: 10px;
+}
+
+.alerts-list ul {
+  margin: 0;
+  padding-left: 20px;
 }
