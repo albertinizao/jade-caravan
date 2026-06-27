@@ -7,6 +7,177 @@ export interface CampaignDashboardSummary {
   notes: string;
 }
 
+export interface CartTypeSummary {
+  key: string;
+  name: string;
+  category?: string | null;
+  cost?: string | null;
+  costCp?: string | null;
+  hitPoints?: number | null;
+  hardness?: number | null;
+  propulsionRequirement?: number | null;
+  towingCreatureLimit?: string | null;
+  consumption?: string | null;
+  passengerCapacity?: string | null;
+  cargoCapacity?: string | null;
+  restrictions?: string[];
+  effects?: string[];
+  campaignSpecific?: boolean;
+  source?: string | null;
+  note?: string | null;
+}
+
+export interface UpgradeSummary {
+  key: string;
+  name: string;
+  cost?: string | null;
+  costCp?: string | null;
+  restriction?: string | null;
+  stackingRule?: string | null;
+  incompatibilities?: string[];
+  effect?: string | null;
+  campaignSpecific?: boolean;
+  source?: string | null;
+  note?: string | null;
+}
+
+export interface RoleSummary {
+  key: string;
+  name: string;
+  hardLimit?: string | null;
+  requirement?: string | null;
+  benefitSummary?: string | null;
+  optionalSubsystem?: boolean;
+  campaignSpecific?: boolean;
+  source?: string | null;
+  note?: string | null;
+}
+
+export interface BeastTypeSummary {
+  key: string;
+  name: string;
+  priceBase?: string | null;
+  priceBaseCp?: string | null;
+  priceTrained?: string | null;
+  priceTrainedCp?: string | null;
+  strength?: number | null;
+  size?: string | null;
+  speedFeet?: number | null;
+  temperatureAdaptation?: number | null;
+  adaptationNotes?: string | null;
+  campaignSpecific?: boolean;
+  source?: string | null;
+  note?: string | null;
+}
+
+export interface CartUpgradeInstanceSummary {
+  cartId: string;
+  upgrade: UpgradeSummary;
+  active: boolean;
+  notes?: string | null;
+}
+
+export interface CartPassengerAssignmentSummary {
+  cartId: string;
+  travellerId: string;
+  occupancyUnits: string;
+  notes?: string | null;
+}
+
+export interface CartCargoAllocationSummary {
+  cartId: string;
+  inventoryLotId: string;
+  quantity: string;
+  notes?: string | null;
+}
+
+export interface TowingAssignmentSummary {
+  beastId: string;
+  cartId: string;
+  campaignDayId: string;
+  consecutiveTowingDays: number;
+}
+
+export interface TravellerContractSummary {
+  contractType: string;
+  monthlyCostCp: number;
+  active: boolean;
+  notes?: string | null;
+  signedAt?: string | null;
+}
+
+export interface TravellerRelationSummary {
+  sourceTravellerId: string;
+  targetTravellerId: string;
+  relationType: string;
+  notes?: string | null;
+}
+
+export interface RoleCapabilitySummary {
+  role: RoleSummary;
+  source: string;
+  notes?: string | null;
+}
+
+export interface DailyRoleAssignmentSummary {
+  travellerId: string;
+  campaignDayId: string;
+  role: RoleSummary;
+  targetCartId?: string | null;
+  targetTravellerId?: string | null;
+  targetSkill?: string | null;
+  targetLanguage?: string | null;
+  optionJson?: string | null;
+}
+
+export interface CheckResolutionSummary {
+  id: string;
+  campaignDayId: string;
+  checkType: string;
+  modifiers: Array<Record<string, unknown>>;
+  dc: number;
+  naturalRoll?: number | null;
+  total?: number | null;
+  outcome: string;
+  notes?: string | null;
+}
+
+export interface CaravanEventSummary {
+  id: string;
+  campaignDayId: string;
+  source: string;
+  severity: string;
+  narrativeSummary: string;
+  requiresCheck: boolean;
+  checkResolutionId?: string | null;
+  resolved: boolean;
+  effectsApplied: boolean;
+}
+
+export interface TradeTransactionSummary {
+  id: string;
+  campaignDayId: string;
+  transactionType: string;
+  cargoTypeId: string;
+  quantity: string;
+  unitValueCp: number;
+  totalValueCp: number;
+  inventoryLotId?: string | null;
+  notes?: string | null;
+}
+
+export interface LedgerEntrySummary {
+  id: string;
+  campaignDayId: string;
+  operationType: string;
+  resourceType: string;
+  resourceId?: string | null;
+  delta: string;
+  reason: string;
+  relatedEventId?: string | null;
+  createdAt: string;
+}
+
 export type DecisionGateResolutionState = 'unresolved' | 'resolved';
 
 export interface DecisionGateBlockerSummary {
@@ -143,9 +314,9 @@ export interface CampaignDay {
   travelHours?: string | null;
   plannedDistanceMiles?: string | null;
   resolvedDistanceMiles?: string | null;
-  checkResolutions: Array<Record<string, unknown>>;
-  caravanEvents: Array<Record<string, unknown>>;
-  tradeTransactions: Array<Record<string, unknown>>;
+  checkResolutions: CheckResolutionSummary[];
+  caravanEvents: CaravanEventSummary[];
+  tradeTransactions: TradeTransactionSummary[];
 }
 
 export interface CaravanStats {
@@ -158,31 +329,61 @@ export interface CaravanStats {
 export interface TravellerSummary {
   id: string;
   name: string;
-  dailyRoleAssignments: Array<Record<string, unknown>>;
+  playerCharacter?: boolean;
+  humanoid?: boolean;
+  size?: string | null;
+  foodConsumption?: number | null;
+  occupancyUnits?: string | null;
+  countsAsTraveller?: boolean;
+  needsRest?: boolean;
+  needsFood?: boolean;
+  baseAttackBonus?: number | null;
+  hitDice?: number | null;
+  alive?: boolean;
+  conscious?: boolean;
+  status?: string | null;
+  contract?: TravellerContractSummary | null;
+  relations?: TravellerRelationSummary[];
+  roleCapabilities?: RoleCapabilitySummary[];
+  dailyRoleAssignments: DailyRoleAssignmentSummary[];
 }
 
 export interface CartSummary {
   id: string;
   name: string;
+  cartType?: CartTypeSummary | null;
   destroyed: boolean;
   currentHitPoints: number;
-  towingAssignments: Array<Record<string, unknown>>;
-  passengerAssignments: Array<Record<string, unknown>>;
+  notes?: string | null;
+  upgradeInstances?: CartUpgradeInstanceSummary[];
+  towingAssignments: TowingAssignmentSummary[];
+  passengerAssignments: CartPassengerAssignmentSummary[];
+  cargoAllocations?: CartCargoAllocationSummary[];
 }
 
 export interface BeastSummary {
   id: string;
   name: string;
+  beastType?: BeastTypeSummary | null;
+  currentHitPoints?: number | null;
+  trainedForCombat?: boolean;
   activeAsTowing: boolean;
   fatigued: boolean;
-  towingAssignment?: Record<string, unknown> | null;
+  towingAssignment?: TowingAssignmentSummary | null;
+  notes?: string | null;
 }
 
 export interface InventoryLotSummary {
   id: string;
   cargoTypeId: string;
   quantity: string;
+  unitCapacity?: string | null;
+  unitValueCp?: number | null;
+  cartId?: string | null;
+  originSettlementId?: string | null;
   remainingProvisions?: string | null;
+  perishableDecayProgress?: string | null;
+  metadata?: Record<string, string>;
 }
 
 export interface CampaignDaySummary {
@@ -219,10 +420,10 @@ export interface CampaignDailyCycleState {
     beasts: BeastSummary[];
     inventoryLots: InventoryLotSummary[];
     campaignDays: CampaignDay[];
-    checkResolutions: Array<Record<string, unknown>>;
-    caravanEvents: Array<Record<string, unknown>>;
-    tradeTransactions: Array<Record<string, unknown>>;
-    ledgerEntries: Array<Record<string, unknown>>;
+    checkResolutions: CheckResolutionSummary[];
+    caravanEvents: CaravanEventSummary[];
+    tradeTransactions: TradeTransactionSummary[];
+    ledgerEntries: LedgerEntrySummary[];
   };
   activeDayId: string;
   lastSummary?: CampaignDaySummary | null;

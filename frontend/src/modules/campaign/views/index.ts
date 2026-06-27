@@ -1,3 +1,9 @@
 export { default as CampaignDashboardView } from './CampaignDashboardView.vue';
+export { default as CampaignCartsView } from './CampaignCartsView.vue';
 export { default as CampaignDailyCycleView } from './CampaignDailyCycleView.vue';
+export { default as CampaignBeastsView } from './CampaignBeastsView.vue';
+export { default as CampaignCommerceView } from './CampaignCommerceView.vue';
+export { default as CampaignHistoryView } from './CampaignHistoryView.vue';
+export { default as CampaignInventoryView } from './CampaignInventoryView.vue';
 export { default as CampaignRulesView } from './CampaignRulesView.vue';
+export { default as CampaignTravellersView } from './CampaignTravellersView.vue';
