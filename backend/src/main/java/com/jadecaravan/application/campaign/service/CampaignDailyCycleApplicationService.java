@@ -1,6 +1,7 @@
 package com.jadecaravan.application.campaign.service;
 
 import com.jadecaravan.application.campaign.port.in.CampaignDailyCycleUseCase;
+import com.jadecaravan.application.campaign.initialstate.ObservedInitialStateSeed;
 import com.jadecaravan.application.campaign.port.out.CampaignAuditRepository;
 import com.jadecaravan.application.campaign.port.out.CampaignDailyCycleRepository;
 import com.jadecaravan.application.campaign.port.out.CampaignRulesRepository;
@@ -313,10 +314,14 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
         return dailyCycleRepository.findByCampaignId(campaignId)
                 .orElseGet(() -> {
                     CampaignRuleState ruleState = campaignRulesRepository.loadOrCreate(campaignId);
-                    UUID dayId = UUID.randomUUID();
+                    Caravan seededCaravan = seedCaravan(campaignId, ruleState.ruleSetVersionId(), UUID.randomUUID());
+                    UUID dayId = seededCaravan.campaignDays().stream()
+                            .findFirst()
+                            .map(CampaignDay::id)
+                            .orElseThrow(() -> new IllegalStateException("Seeded caravan must include at least one campaign day"));
                     CampaignDailyCycleState seeded = CampaignDailyCycleState.seeded(
                             campaignId,
-                            seedCaravan(campaignId, ruleState.ruleSetVersionId(), dayId),
+                            seededCaravan,
                             dayId,
                             null);
                     dailyCycleRepository.save(seeded);
@@ -589,115 +594,9 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
     }
 
     private Caravan seedCaravan(UUID campaignId, String ruleSetVersionId, UUID dayId) {
-        UUID caravanId = UUID.randomUUID();
-        UUID travelerId = UUID.randomUUID();
-        UUID cartId = UUID.randomUUID();
-        UUID beastId = UUID.randomUUID();
-        CampaignDay day = new CampaignDay(
-                dayId,
-                caravanId,
-                1,
-                CampaignDayStatus.DRAFT,
-                CampaignDayActivityType.TRAVEL,
-                "Road",
-                "Jade Road",
-                "Village",
-                70,
-                "clear",
-                new BigDecimal("8"),
-                new BigDecimal("12"),
-                ZERO,
-                List.of(),
-                List.of(),
-                List.of());
-        CartTypeCatalogEntry cartType = catalogRegistry.cartType("TRAVELLER_CART");
-        BeastCatalogEntry beastType = catalogRegistry.beast("LIGHT_HORSE");
-        Traveller traveller = new Traveller(
-                travelerId,
-                caravanId,
-                "Jia",
-                false,
-                true,
-                "Medium",
-                1,
-                BigDecimal.ONE,
-                true,
-                true,
-                true,
-                1,
-                1,
-                true,
-                true,
-                "ACTIVE",
-                null,
-                List.of(),
-                List.of(),
-                List.of(new DailyRoleAssignment(
-                        travelerId,
-                        dayId,
-                        catalogRegistry.role("WAGONER"),
-                        cartId,
-                        null,
-                        null,
-                        null,
-                        null)));
-        Cart cart = new Cart(
-                cartId,
-                caravanId,
-                cartType.name(),
-                cartType,
-                cartType.hitPoints(),
-                false,
-                null,
-                List.of(),
-                List.of(),
-                List.of(),
-                List.of(),
-                List.of(new TowingAssignment(beastId, cartId, dayId)));
-        Beast beast = new Beast(
-                beastId,
-                caravanId,
-                beastType,
-                beastType.name(),
-                beastType.strength() * 10,
-                false,
-                false,
-                true,
-                new TowingAssignment(beastId, cartId, dayId),
-                null);
-        InventoryLot supplies = new InventoryLot(
-                UUID.randomUUID(),
-                caravanId,
-                "SUPPLIES",
-                new BigDecimal("10"),
-                BigDecimal.ONE,
-                0L,
-                cartId,
-                null,
-                new BigDecimal("100"),
-                ZERO,
-                Map.of());
-        return new Caravan(
-                caravanId,
-                campaignId,
-                "Caravana de prueba",
-                1,
-                ruleSetVersionId,
-                new com.jadecaravan.domain.campaign.CaravanStats(4, 4, 4, 4),
-                ZERO,
-                1,
-                List.of(traveller),
-                List.of(cart),
-                List.of(beast),
-                List.of(supplies),
-                List.of(day),
-                List.of(),
-                List.of(),
-                List.of(),
-                List.of(),
-                List.of(),
-                ZERO,
-                ZERO);
+        return ObservedInitialStateSeed.create(catalogRegistry)
+                .buildState(campaignId, ruleSetVersionId)
+                .caravan();
     }
 
     private void appendAuditEntry(
