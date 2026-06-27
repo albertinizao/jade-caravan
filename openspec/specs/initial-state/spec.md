@@ -4,6 +4,8 @@
 
 This specification captures the observed Excel snapshot as import seed data and highlights the data-quality issues that must be handled before live play.
 
+Excel snapshot: jade-caravan/docs/Caravana Regente de Jade.xlsx
+
 ## Requirements
 
 ### 1. Observed snapshot
@@ -41,7 +43,7 @@ The import layer SHOULD preserve the observed active roles where the spreadsheet
 The system SHOULD surface the following issues as import warnings or exceptions to verify:
 
 - a family carriage with 6.5 of 6 passengers may require an explicit campaign exception;
-- `Carro taberna` exists in the spreadsheet but not in the shared rules catalog;
+- `Carro taberna` exists in the spreadsheet but not in the shared rules catalog; it's a custom instance of `Carro vacío`.
 - the sheet does not expose all caravan base stats or feat assignments;
 - some driver assignments must be recreated or imported;
 - some vehicles have accumulated damage, so current HP MUST be imported, not only damage.
