@@ -247,6 +247,7 @@ class CaravanCalculationServiceTest {
                 20,
                 false,
                 null,
+                List.of(),
                 normalizedUpgrades,
                 List.of(),
                 normalizedCargoAllocations,
@@ -353,7 +354,10 @@ class CaravanCalculationServiceTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                List.of());
+                List.of(),
+                List.of(),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO);
     }
 
     private static CampaignDay campaignDay() {

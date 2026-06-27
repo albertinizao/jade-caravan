@@ -3,13 +3,17 @@ package com.jadecaravan.domain.calculation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.jadecaravan.domain.campaign.Beast;
+import com.jadecaravan.domain.campaign.CaravanFeatInstance;
 import com.jadecaravan.domain.campaign.CampaignDay;
 import com.jadecaravan.domain.campaign.CampaignDayActivityType;
 import com.jadecaravan.domain.campaign.CampaignDayStatus;
 import com.jadecaravan.domain.campaign.Caravan;
 import com.jadecaravan.domain.campaign.CaravanStats;
+import com.jadecaravan.domain.campaign.CartDamageResolution;
+import com.jadecaravan.domain.campaign.CartRepairResolution;
 import com.jadecaravan.domain.campaign.Cart;
 import com.jadecaravan.domain.campaign.CartCargoAllocation;
 import com.jadecaravan.domain.campaign.CartPassengerAssignment;
@@ -239,6 +243,97 @@ class CaravanBusinessRulesTest {
         assertTrue(CaravanBusinessRules.isMutinyTriggered(caravan));
     }
 
+    @Test
+    void secondOracleAssignmentIsRejected() {
+        CatalogRegistry registry = CatalogRegistry.seeded();
+        CampaignDay day = campaignDay();
+        UUID cartId = UUID.randomUUID();
+        UUID beastId = UUID.randomUUID();
+
+        Cart cart = cart(
+                cartId,
+                customCartType("ORACLE_CART", "Oracle cart", 20, 5, 4, 1, 2, 4, 1),
+                List.of(),
+                List.of(),
+                List.of(new TowingAssignment(beastId, cartId, day.id())));
+        Beast towingBeast = beastForCart(beastId, cartId, day.id(), 10, 40);
+
+        Caravan caravan = caravan(
+                List.of(
+                        traveller("Oracle One", BigDecimal.ONE, 1L, true, dailyRole("DIVINER", day.id(), cart.id())),
+                        traveller("Oracle Two", BigDecimal.ONE, 1L, true, dailyRole("DIVINER", day.id(), cart.id()))),
+                List.of(cart),
+                List.of(towingBeast),
+                List.of(),
+                1);
+
+        TravelValidationResult result = CaravanBusinessRules.validateTravel(caravan, registry, null, day, TravelContext.empty());
+
+        assertTrue(result.blockers().stream().anyMatch(blocker -> blocker.code() == BusinessRuleCode.ORACLE_LIMIT_EXCEEDED));
+    }
+
+    @Test
+    void repairConsumesOneMaterialAndRestoresFifteenTimesCaravanLevel() {
+        CatalogRegistry registry = CatalogRegistry.seeded();
+        CampaignDay day = campaignDay();
+        UUID cartId = UUID.randomUUID();
+        Cart damagedCart = cart(
+                cartId,
+                customCartType("REPAIR_CART", "Repair cart", 60, 5, 4, 1, 2, 4, 1),
+                List.of(),
+                List.of(),
+                List.of());
+        Caravan caravan = caravan(
+                List.of(traveller("Driver", BigDecimal.ONE, 1L, true, dailyRole("WAGONER", day.id(), cartId))),
+                List.of(damagedCart.withCurrentHitPoints(5)),
+                List.of(),
+                List.of(lot("REPAIR_MATERIAL", "repair_material", BigDecimal.ONE, BigDecimal.ONE, Map.of())),
+                2);
+
+        CartRepairResolution resolution = CaravanBusinessRules.resolveRepair(caravan, cartId, true, true, true);
+
+        assertEquals(1, resolution.materialsConsumed());
+        assertEquals(30, resolution.hitPointsRestored());
+        assertEquals(35, resolution.resultingHitPoints());
+        assertEquals(new BigDecimal("0"), resolution.caravan().inventoryLots().get(0).quantity());
+    }
+
+    @Test
+    void levellingFromNothingProtectsTheFirstLethalDamageButConsumesTheFeat() {
+        CatalogRegistry registry = CatalogRegistry.seeded();
+        CampaignDay day = campaignDay();
+        UUID protectedCartId = UUID.randomUUID();
+        UUID destroyedCartId = UUID.randomUUID();
+        Cart protectedCart = cart(
+                protectedCartId,
+                customCartType("PROTECTED_CART", "Protected cart", 20, 5, 4, 1, 2, 4, 1),
+                List.of(),
+                List.of(),
+                List.of());
+        Cart secondCart = cart(
+                destroyedCartId,
+                customCartType("SECOND_CART", "Second cart", 20, 5, 4, 1, 2, 4, 1),
+                List.of(),
+                List.of(),
+                List.of());
+        Caravan caravan = caravan(List.of(), List.of(protectedCart, secondCart), List.of(), List.of(), 1)
+                .withFeatInstance(new CaravanFeatInstance(UUID.randomUUID(), CARAVAN_ID, "LEVANTARSE_DE_LA_NADA", Map.of(), false, null));
+
+        CartDamageResolution firstResolution = CaravanBusinessRules.resolveLethalDamage(caravan, protectedCartId, 25);
+
+        assertFalse(firstResolution.destroyed());
+        assertTrue(firstResolution.protectedByLevellingFromNothing());
+        assertEquals(0, firstResolution.resultingHitPoints());
+        assertTrue(firstResolution.caravan().findCart(protectedCartId).orElseThrow().hasTrait("LEVANTADO_DE_LA_NADA"));
+        assertTrue(firstResolution.caravan().findFeatInstance("LEVANTARSE_DE_LA_NADA").orElseThrow().consumed());
+
+        CartDamageResolution secondResolution = CaravanBusinessRules.resolveLethalDamage(firstResolution.caravan(), destroyedCartId, 25);
+
+        assertTrue(secondResolution.destroyed());
+        assertFalse(secondResolution.protectedByLevellingFromNothing());
+        assertEquals(0, secondResolution.resultingHitPoints());
+    }
+
     private static Cart cart(
             CartTypeCatalogEntry cartType,
             List<CartUpgradeInstance> upgrades,
@@ -270,6 +365,7 @@ class CaravanBusinessRulesTest {
                 20,
                 false,
                 null,
+                List.of(),
                 normalizedUpgrades,
                 List.of(),
                 normalizedCargoAllocations,
@@ -421,7 +517,10 @@ class CaravanBusinessRulesTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                List.of());
+                List.of(),
+                List.of(),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO);
     }
 
     private static CartTypeCatalogEntry customCartType(
