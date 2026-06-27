@@ -145,6 +145,29 @@ public record Caravan(
                 ledgerEntries);
     }
 
+    public Caravan replaceTraveller(Traveller traveller) {
+        DomainValidation.requireNonNull(traveller, "traveller");
+        ensureSameCaravan(id, traveller.caravanId(), "traveller");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                DomainCollections.replace(travellers, existing -> existing.id().equals(traveller.id()), traveller),
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
+    }
+
     public Caravan withCart(Cart cart) {
         DomainValidation.requireNonNull(cart, "cart");
         ensureSameCaravan(id, cart.caravanId(), "cart");
@@ -159,6 +182,29 @@ public record Caravan(
                 currentDayNumber,
                 travellers,
                 DomainCollections.append(carts, cart),
+                beasts,
+                inventoryLots,
+                campaignDays,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
+    }
+
+    public Caravan replaceCart(Cart cart) {
+        DomainValidation.requireNonNull(cart, "cart");
+        ensureSameCaravan(id, cart.caravanId(), "cart");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                DomainCollections.replace(carts, existing -> existing.id().equals(cart.id()), cart),
                 beasts,
                 inventoryLots,
                 campaignDays,
@@ -191,6 +237,29 @@ public record Caravan(
                 ledgerEntries);
     }
 
+    public Caravan replaceBeast(Beast beast) {
+        DomainValidation.requireNonNull(beast, "beast");
+        ensureSameCaravan(id, beast.caravanId(), "beast");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                DomainCollections.replace(beasts, existing -> existing.id().equals(beast.id()), beast),
+                inventoryLots,
+                campaignDays,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
+    }
+
     public Caravan withInventoryLot(InventoryLot inventoryLot) {
         DomainValidation.requireNonNull(inventoryLot, "inventoryLot");
         ensureSameCaravan(id, inventoryLot.caravanId(), "inventoryLot");
@@ -207,6 +276,29 @@ public record Caravan(
                 carts,
                 beasts,
                 DomainCollections.append(inventoryLots, inventoryLot),
+                campaignDays,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
+    }
+
+    public Caravan replaceInventoryLot(InventoryLot inventoryLot) {
+        DomainValidation.requireNonNull(inventoryLot, "inventoryLot");
+        ensureSameCaravan(id, inventoryLot.caravanId(), "inventoryLot");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                DomainCollections.replace(inventoryLots, existing -> existing.id().equals(inventoryLot.id()), inventoryLot),
                 campaignDays,
                 checkResolutions,
                 caravanEvents,
@@ -231,6 +323,29 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 DomainCollections.append(campaignDays, campaignDay),
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
+    }
+
+    public Caravan replaceCampaignDay(CampaignDay campaignDay) {
+        DomainValidation.requireNonNull(campaignDay, "campaignDay");
+        ensureSameCaravan(id, campaignDay.caravanId(), "campaignDay");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                DomainCollections.replace(campaignDays, existing -> existing.id().equals(campaignDay.id()), campaignDay),
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
@@ -323,6 +438,28 @@ public record Caravan(
                 caravanEvents,
                 tradeTransactions,
                 DomainCollections.append(ledgerEntries, ledgerEntry));
+    }
+
+    public Caravan withCurrentDayNumber(int newCurrentDayNumber) {
+        DomainValidation.requireRangeInclusive(newCurrentDayNumber, "newCurrentDayNumber", 0, Integer.MAX_VALUE);
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                newCurrentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries);
     }
 
     private static void validateOwnership(

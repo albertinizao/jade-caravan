@@ -24,6 +24,23 @@ final class DomainCollections {
         return List.copyOf(copy);
     }
 
+    static <T> List<T> replace(List<T> values, Predicate<? super T> predicate, T value) {
+        ArrayList<T> copy = new ArrayList<>(immutableCopy(values));
+        int index = -1;
+        for (int i = 0; i < copy.size(); i++) {
+            if (predicate.test(copy.get(i))) {
+                index = i;
+                break;
+            }
+        }
+        if (index >= 0) {
+            copy.set(index, value);
+        } else {
+            copy.add(value);
+        }
+        return List.copyOf(copy);
+    }
+
     static <T> List<T> filter(List<T> values, Predicate<? super T> predicate) {
         return immutableCopy(values).stream().filter(predicate).toList();
     }

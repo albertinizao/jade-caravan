@@ -92,6 +92,33 @@ public record CampaignDay(
         return withStatus(CampaignDayStatus.CLOSED);
     }
 
+    public CampaignDay reopen(CampaignDayStatus newStatus) {
+        DomainValidation.requireNonNull(newStatus, "newStatus");
+        if (!isClosed()) {
+            throw new IllegalStateException("Only closed campaign days can be reopened");
+        }
+        if (newStatus == CampaignDayStatus.CLOSED || newStatus == CampaignDayStatus.CANCELLED) {
+            throw new IllegalArgumentException("Reopened campaign days must transition back to an open status");
+        }
+        return new CampaignDay(
+                id,
+                caravanId,
+                dayNumber,
+                newStatus,
+                activityType,
+                terrainType,
+                location,
+                settlementType,
+                temperatureF,
+                weatherSeverity,
+                travelHours,
+                plannedDistanceMiles,
+                resolvedDistanceMiles,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions);
+    }
+
     public CampaignDay withPlannedDistanceMiles(BigDecimal distanceMiles) {
         ensureMutable();
         DomainValidation.requireNonNegative(distanceMiles, "distanceMiles");
