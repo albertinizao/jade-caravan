@@ -5,6 +5,8 @@ import com.jadecaravan.domain.campaign.CampaignDay;
 import com.jadecaravan.domain.campaign.Cart;
 import com.jadecaravan.domain.campaign.CartCargoAllocation;
 import com.jadecaravan.domain.campaign.CartPassengerAssignment;
+import com.jadecaravan.domain.campaign.CartDamageResolution;
+import com.jadecaravan.domain.campaign.CartRepairResolution;
 import com.jadecaravan.domain.campaign.CartUpgradeInstance;
 import com.jadecaravan.domain.campaign.Caravan;
 import com.jadecaravan.domain.campaign.CaravanStats;
@@ -197,6 +199,19 @@ public final class CaravanBusinessRules {
                                     "thresholdDays", Integer.toString(thresholdDays))));
                 }
             }
+        }
+
+        long oracleAssignments = caravan.travellers().stream()
+                .flatMap(traveller -> traveller.dailyRoleAssignments().stream())
+                .filter(assignment -> campaignDay.id().equals(assignment.campaignDayId()))
+                .filter(assignment -> isOracleRole(assignment.role().key()))
+                .count();
+        if (oracleAssignments > 1) {
+            blockers.add(issue(
+                    BusinessRuleCode.ORACLE_LIMIT_EXCEEDED,
+                    "Only one active Oracle is allowed",
+                    campaignDay.id().toString(),
+                    Map.of("oracleAssignments", Long.toString(oracleAssignments))));
         }
 
         return new TravelValidationResult(
@@ -521,6 +536,64 @@ public final class CaravanBusinessRules {
     public static int calculateRepairHitPoints(Caravan caravan) {
         Objects.requireNonNull(caravan, "caravan must not be null");
         return caravan.level() * 15;
+    }
+
+    public static CartRepairResolution resolveRepair(
+            Caravan caravan,
+            UUID cartId,
+            boolean stationaryDay,
+            boolean hasDriver,
+            boolean hasRepairMaterial) {
+        Objects.requireNonNull(caravan, "caravan must not be null");
+        Objects.requireNonNull(cartId, "cartId must not be null");
+        if (!stationaryDay) {
+            throw new IllegalStateException("Repair requires a stationary day");
+        }
+        if (!hasDriver) {
+            throw new IllegalStateException("Repair requires a driver");
+        }
+        if (!hasRepairMaterial) {
+            throw new IllegalStateException("Repair material is required");
+        }
+
+        Cart cart = caravan.findCart(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown cart " + cartId));
+        int requestedRestoredHitPoints = calculateRepairHitPoints(caravan);
+        int resultingHitPoints = Math.min(cart.cartType().hitPoints(), cart.currentHitPoints() + requestedRestoredHitPoints);
+        int actualRestoredHitPoints = resultingHitPoints - cart.currentHitPoints();
+        Cart repairedCart = cart.withCurrentHitPoints(resultingHitPoints).withDestroyed(false);
+
+        Caravan updatedCaravan = caravan.replaceCart(repairedCart);
+        updatedCaravan = consumeRepairMaterial(updatedCaravan);
+        return new CartRepairResolution(updatedCaravan, cartId, 1, actualRestoredHitPoints, resultingHitPoints);
+    }
+
+    public static CartDamageResolution resolveLethalDamage(
+            Caravan caravan,
+            UUID cartId,
+            int damageTaken) {
+        Objects.requireNonNull(caravan, "caravan must not be null");
+        Objects.requireNonNull(cartId, "cartId must not be null");
+        if (damageTaken < 0) {
+            throw new IllegalArgumentException("damageTaken must not be negative");
+        }
+        Cart cart = caravan.findCart(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown cart " + cartId));
+        int resultingHitPoints = cart.currentHitPoints() - damageTaken;
+        boolean lethal = resultingHitPoints <= 0;
+        if (!lethal) {
+            Cart updatedCart = cart.withCurrentHitPoints(resultingHitPoints);
+            return new CartDamageResolution(caravan.replaceCart(updatedCart), cartId, damageTaken, resultingHitPoints, false, false);
+        }
+
+        if (caravan.hasUnusedFeat("LEVANTARSE_DE_LA_NADA")) {
+            Cart protectedCart = cart.withCurrentHitPoints(0).withDestroyed(false).withTrait("LEVANTADO_DE_LA_NADA");
+            Caravan updatedCaravan = caravan.replaceCart(protectedCart).consumeFeat("LEVANTARSE_DE_LA_NADA");
+            return new CartDamageResolution(updatedCaravan, cartId, damageTaken, 0, false, true);
+        }
+
+        Cart destroyedCart = cart.withCurrentHitPoints(0).withDestroyed(true);
+        return new CartDamageResolution(caravan.replaceCart(destroyedCart), cartId, damageTaken, 0, true, false);
     }
 
     public static boolean isMutinyTriggered(Caravan caravan) {
@@ -915,6 +988,11 @@ public final class CaravanBusinessRules {
         return isMedicalCart(normalized(cart.cartType().key()), normalized(cart.cartType().name()));
     }
 
+    private static boolean isOracleRole(String roleKey) {
+        String normalizedRoleKey = normalized(roleKey);
+        return normalizedRoleKey.contains("oracle") || normalizedRoleKey.contains("diviner") || normalizedRoleKey.contains("adivin");
+    }
+
     private static boolean isSpecialCargoCart(String cartTypeKey, String cartName) {
         return cartTypeKey.contains("special") || cartTypeKey.contains("cargo") || cartName.contains("especial") || cartName.contains("carga");
     }
@@ -987,5 +1065,20 @@ public final class CaravanBusinessRules {
         String decomposed = Normalizer.normalize(value, Normalizer.Form.NFD);
         String stripped = decomposed.replaceAll("\\p{M}+", "");
         return stripped.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static Caravan consumeRepairMaterial(Caravan caravan) {
+        for (InventoryLot lot : caravan.inventoryLots()) {
+            if (!normalized(lot.cargoTypeId()).contains("repair_material")) {
+                continue;
+            }
+            BigDecimal quantity = lot.quantity();
+            if (quantity.signum() <= 0) {
+                continue;
+            }
+            InventoryLot updatedLot = lot.withQuantity(quantity.subtract(BigDecimal.ONE));
+            return caravan.replaceInventoryLot(updatedLot);
+        }
+        throw new IllegalStateException("Repair material is required");
     }
 }

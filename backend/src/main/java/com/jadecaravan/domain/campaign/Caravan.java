@@ -18,10 +18,13 @@ public record Caravan(
         List<Beast> beasts,
         List<InventoryLot> inventoryLots,
         List<CampaignDay> campaignDays,
+        List<CaravanFeatInstance> featInstances,
         List<CheckResolution> checkResolutions,
         List<CaravanEvent> caravanEvents,
         List<TradeTransaction> tradeTransactions,
-        List<LedgerEntry> ledgerEntries) {
+        List<LedgerEntry> ledgerEntries,
+        BigDecimal lastCargoGiftQuantity,
+        BigDecimal lastTreasureGiftQuantity) {
 
     public Caravan {
         DomainValidation.requireNonNull(id, "id");
@@ -37,11 +40,14 @@ public record Caravan(
         beasts = DomainCollections.immutableCopy(beasts);
         inventoryLots = DomainCollections.immutableCopy(inventoryLots);
         campaignDays = DomainCollections.immutableCopy(campaignDays);
+        featInstances = DomainCollections.immutableCopy(featInstances);
         checkResolutions = DomainCollections.immutableCopy(checkResolutions);
         caravanEvents = DomainCollections.immutableCopy(caravanEvents);
         tradeTransactions = DomainCollections.immutableCopy(tradeTransactions);
         ledgerEntries = DomainCollections.immutableCopy(ledgerEntries);
-        validateOwnership(id, travellers, carts, beasts, inventoryLots, campaignDays);
+        lastCargoGiftQuantity = normalizeNonNegative(lastCargoGiftQuantity, "lastCargoGiftQuantity");
+        lastTreasureGiftQuantity = normalizeNonNegative(lastTreasureGiftQuantity, "lastTreasureGiftQuantity");
+        validateOwnership(id, travellers, carts, beasts, inventoryLots, campaignDays, featInstances);
     }
 
     public long countingTravellerCount() {
@@ -91,6 +97,31 @@ public record Caravan(
         return campaignDays.stream().filter(day -> day.id().equals(campaignDayId)).findFirst();
     }
 
+    public java.util.Optional<CaravanFeatInstance> findFeatInstance(UUID featInstanceId) {
+        return featInstances.stream().filter(featInstance -> featInstance.id().equals(featInstanceId)).findFirst();
+    }
+
+    public java.util.Optional<CaravanFeatInstance> findFeatInstance(String featKey) {
+        if (featKey == null) {
+            return java.util.Optional.empty();
+        }
+        String normalizedFeatKey = featKey.trim();
+        return featInstances.stream()
+                .filter(featInstance -> featInstance.featKey().equalsIgnoreCase(normalizedFeatKey))
+                .findFirst();
+    }
+
+    public boolean hasUnusedFeat(String featKey) {
+        return findFeatInstance(featKey).filter(featInstance -> !featInstance.consumed()).isPresent();
+    }
+
+    public List<String> activeFeatKeys() {
+        return featInstances.stream()
+                .filter(featInstance -> !featInstance.consumed())
+                .map(CaravanFeatInstance::featKey)
+                .toList();
+    }
+
     public Caravan withCurrentDiscontent(BigDecimal newCurrentDiscontent) {
         DomainValidation.requireNonNegative(newCurrentDiscontent, "newCurrentDiscontent");
         return new Caravan(
@@ -107,10 +138,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan adjustDiscontent(BigDecimal delta) {
@@ -139,10 +173,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan replaceTraveller(Traveller traveller) {
@@ -162,10 +199,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withCart(Cart cart) {
@@ -185,10 +225,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan replaceCart(Cart cart) {
@@ -208,10 +251,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withBeast(Beast beast) {
@@ -231,10 +277,13 @@ public record Caravan(
                 DomainCollections.append(beasts, beast),
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan replaceBeast(Beast beast) {
@@ -254,10 +303,13 @@ public record Caravan(
                 DomainCollections.replace(beasts, existing -> existing.id().equals(beast.id()), beast),
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withInventoryLot(InventoryLot inventoryLot) {
@@ -277,10 +329,13 @@ public record Caravan(
                 beasts,
                 DomainCollections.append(inventoryLots, inventoryLot),
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan replaceInventoryLot(InventoryLot inventoryLot) {
@@ -300,10 +355,13 @@ public record Caravan(
                 beasts,
                 DomainCollections.replace(inventoryLots, existing -> existing.id().equals(inventoryLot.id()), inventoryLot),
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withCampaignDay(CampaignDay campaignDay) {
@@ -323,10 +381,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 DomainCollections.append(campaignDays, campaignDay),
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan replaceCampaignDay(CampaignDay campaignDay) {
@@ -346,10 +407,75 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 DomainCollections.replace(campaignDays, existing -> existing.id().equals(campaignDay.id()), campaignDay),
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
+    }
+
+    public Caravan withFeatInstance(CaravanFeatInstance featInstance) {
+        DomainValidation.requireNonNull(featInstance, "featInstance");
+        ensureSameCaravan(id, featInstance.caravanId(), "featInstance");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                DomainCollections.append(featInstances, featInstance),
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
+    }
+
+    public Caravan replaceFeatInstance(CaravanFeatInstance featInstance) {
+        DomainValidation.requireNonNull(featInstance, "featInstance");
+        ensureSameCaravan(id, featInstance.caravanId(), "featInstance");
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                DomainCollections.replace(featInstances, existing -> existing.id().equals(featInstance.id()), featInstance),
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
+    }
+
+    public Caravan consumeFeat(String featKey) {
+        DomainValidation.requireNonBlank(featKey, "featKey");
+        CaravanFeatInstance featInstance = featInstances.stream()
+                .filter(existingFeat -> existingFeat.featKey().equalsIgnoreCase(featKey.trim()))
+                .filter(existingFeat -> !existingFeat.consumed())
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Feat not available: " + featKey));
+        return replaceFeatInstance(featInstance.withConsumed(true));
     }
 
     public Caravan withCheckResolution(CheckResolution checkResolution) {
@@ -368,10 +494,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 DomainCollections.append(checkResolutions, checkResolution),
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withCaravanEvent(CaravanEvent caravanEvent) {
@@ -390,10 +519,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 DomainCollections.append(caravanEvents, caravanEvent),
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withTradeTransaction(TradeTransaction tradeTransaction) {
@@ -412,10 +544,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 DomainCollections.append(tradeTransactions, tradeTransaction),
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withLedgerEntry(LedgerEntry ledgerEntry) {
@@ -434,10 +569,13 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                DomainCollections.append(ledgerEntries, ledgerEntry));
+                DomainCollections.append(ledgerEntries, ledgerEntry),
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
     }
 
     public Caravan withCurrentDayNumber(int newCurrentDayNumber) {
@@ -456,10 +594,61 @@ public record Caravan(
                 beasts,
                 inventoryLots,
                 campaignDays,
+                featInstances,
                 checkResolutions,
                 caravanEvents,
                 tradeTransactions,
-                ledgerEntries);
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                lastTreasureGiftQuantity);
+    }
+
+    public Caravan withLastCargoGiftQuantity(BigDecimal quantity) {
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                featInstances,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries,
+                quantity,
+                lastTreasureGiftQuantity);
+    }
+
+    public Caravan withLastTreasureGiftQuantity(BigDecimal quantity) {
+        return new Caravan(
+                id,
+                campaignId,
+                name,
+                level,
+                ruleSetVersionId,
+                baseStats,
+                currentDiscontent,
+                currentDayNumber,
+                travellers,
+                carts,
+                beasts,
+                inventoryLots,
+                campaignDays,
+                featInstances,
+                checkResolutions,
+                caravanEvents,
+                tradeTransactions,
+                ledgerEntries,
+                lastCargoGiftQuantity,
+                quantity);
     }
 
     private static void validateOwnership(
@@ -468,17 +657,23 @@ public record Caravan(
             List<Cart> carts,
             List<Beast> beasts,
             List<InventoryLot> inventoryLots,
-            List<CampaignDay> campaignDays) {
+            List<CampaignDay> campaignDays,
+            List<CaravanFeatInstance> featInstances) {
         travellers.forEach(traveller -> ensureSameCaravan(expectedCampaignId, traveller.caravanId(), "traveller"));
         carts.forEach(cart -> ensureSameCaravan(expectedCampaignId, cart.caravanId(), "cart"));
         beasts.forEach(beast -> ensureSameCaravan(expectedCampaignId, beast.caravanId(), "beast"));
         inventoryLots.forEach(lot -> ensureSameCaravan(expectedCampaignId, lot.caravanId(), "inventoryLot"));
         campaignDays.forEach(day -> ensureSameCaravan(expectedCampaignId, day.caravanId(), "campaignDay"));
+        featInstances.forEach(featInstance -> ensureSameCaravan(expectedCampaignId, featInstance.caravanId(), "featInstance"));
     }
 
     private static void ensureSameCaravan(UUID expectedCaravanId, UUID relatedCaravanId, String label) {
         if (!expectedCaravanId.equals(relatedCaravanId)) {
             throw new IllegalArgumentException(label + " must belong to caravan " + expectedCaravanId);
         }
+    }
+
+    private static BigDecimal normalizeNonNegative(BigDecimal value, String name) {
+        return value == null ? BigDecimal.ZERO : DomainValidation.requireNonNegative(value, name);
     }
 }

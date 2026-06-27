@@ -166,7 +166,7 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
                 catalogRegistry,
                 ruleState,
                 activeDay,
-                buildCalculationContext(activeDay, state.operations()));
+                buildCalculationContext(state.caravan(), activeDay, state.operations()));
         List<String> alerts = buildAlerts(travelValidation, summary);
         return new CampaignDayPreview(travelValidation, summary.value(), alerts);
     }
@@ -224,7 +224,7 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
                 catalogRegistry,
                 ruleState,
                 activeDay,
-                buildCalculationContext(activeDay, state.operations()));
+                buildCalculationContext(state.caravan(), activeDay, state.operations()));
 
         BigDecimal plannedDistance = activeDay.plannedDistanceMiles() == null ? ZERO : activeDay.plannedDistanceMiles();
         BigDecimal actualDistance = decideActualDistance(activeDay, summaryResult.value());
@@ -234,9 +234,15 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
         BigDecimal consumptionDeficit = plannedConsumption.subtract(actualConsumption);
         BigDecimal production = calculateProduction(state.caravan(), activeDay);
         BigDecimal discontentBefore = state.caravan().currentDiscontent();
-        BigDecimal discontentAfter = applyDailyDiscontent(state.caravan(), activeDay, validation, summaryResult.value());
+        GiftAdjustmentResult giftAdjustment = applyGiftAdjustments(state.caravan(), state.operations());
+        BigDecimal discontentAfter = applyDailyDiscontent(
+                giftAdjustment.caravan(),
+                activeDay,
+                validation,
+                summaryResult.value(),
+                giftAdjustment.caravan().currentDiscontent());
 
-        Caravan caravan = state.caravan();
+        Caravan caravan = giftAdjustment.caravan();
         caravan = applyConsumption(caravan, actualConsumption);
         caravan = applyPerishableAdvance(caravan, activeDay);
         caravan = applyBeastFatigue(caravan, activeDay, summaryResult.value());
@@ -388,10 +394,10 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
                 ZERO);
     }
 
-    private CaravanCalculationContext buildCalculationContext(CampaignDay activeDay, List<DailyOperation> dailyOperations) {
+    private CaravanCalculationContext buildCalculationContext(Caravan caravan, CampaignDay activeDay, List<DailyOperation> dailyOperations) {
         return new CaravanCalculationContext(
                 buildTravelContext(activeDay, dailyOperations),
-                List.of(),
+                caravan.activeFeatKeys(),
                 hasOperation(dailyOperations, DailyOperationType.FASTING),
                 hasOperation(dailyOperations, DailyOperationType.CELEBRATION),
                 activeDay.settlementType() != null,
@@ -431,8 +437,22 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
         return BigDecimal.valueOf(cooks);
     }
 
-    private BigDecimal applyDailyDiscontent(Caravan caravan, CampaignDay activeDay, TravelValidationResult validation, CaravanCalculationSummary summary) {
-        BigDecimal discontent = caravan.currentDiscontent();
+    private GiftAdjustmentResult applyGiftAdjustments(Caravan caravan, List<DailyOperation> dailyOperations) {
+        Caravan current = caravan;
+        BigDecimal reduction = ZERO;
+        for (DailyOperation operation : safeList(dailyOperations)) {
+            if (operation.operationType() != DailyOperationType.GIFTING) {
+                continue;
+            }
+            GiftAdjustment giftAdjustment = giftAdjustmentFor(current, operation);
+            current = giftAdjustment.caravan();
+            reduction = reduction.add(giftAdjustment.discontentReduction());
+        }
+        return new GiftAdjustmentResult(current, reduction);
+    }
+
+    private BigDecimal applyDailyDiscontent(Caravan caravan, CampaignDay activeDay, TravelValidationResult validation, CaravanCalculationSummary summary, BigDecimal initialDiscontent) {
+        BigDecimal discontent = initialDiscontent;
         for (CaravanEvent caravanEvent : activeDay.caravanEvents()) {
             CalculationResult<BigDecimal> gain = caravanCalculationService.calculateEventDiscontentGain(caravanEvent.severity(), 0, campaignRulesRepository.loadOrCreate(caravan.campaignId()));
             discontent = discontent.add(gain.value());
@@ -441,6 +461,35 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
             discontent = discontent.add(summary.mutinyPenalty().abs());
         }
         return discontent;
+    }
+
+    private GiftAdjustment giftAdjustmentFor(Caravan caravan, DailyOperation operation) {
+        BigDecimal quantity = operation.quantity() == null ? ZERO : operation.quantity();
+        if (quantity.signum() <= 0) {
+            return new GiftAdjustment(caravan, ZERO);
+        }
+        String resourceType = operation.resourceType() == null ? "" : operation.resourceType().trim().toUpperCase();
+        if (!"TREASURE".equals(resourceType) && !"SUPPLIES".equals(resourceType) && !"CARGO".equals(resourceType)) {
+            return new GiftAdjustment(caravan, ZERO);
+        }
+
+        BigDecimal discontentReduction = BigDecimal.ONE;
+        Caravan updatedCaravan = caravan;
+        if ("TREASURE".equals(resourceType)) {
+            if (quantity.compareTo(caravan.lastTreasureGiftQuantity()) > 0) {
+                discontentReduction = BigDecimal.valueOf(3);
+            }
+            updatedCaravan = caravan.withLastTreasureGiftQuantity(quantity);
+        } else {
+            updatedCaravan = caravan.withLastCargoGiftQuantity(quantity);
+        }
+
+        BigDecimal adjustedDiscontent = updatedCaravan.currentDiscontent().subtract(discontentReduction);
+        if (adjustedDiscontent.signum() < 0) {
+            adjustedDiscontent = BigDecimal.ZERO;
+        }
+        updatedCaravan = updatedCaravan.withCurrentDiscontent(adjustedDiscontent);
+        return new GiftAdjustment(updatedCaravan, discontentReduction);
     }
 
     private Caravan applyConsumption(Caravan caravan, BigDecimal actualConsumption) {
@@ -533,6 +582,12 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
         return values == null ? List.of() : values;
     }
 
+    private record GiftAdjustmentResult(Caravan caravan, BigDecimal discontent) {
+    }
+
+    private record GiftAdjustment(Caravan caravan, BigDecimal discontentReduction) {
+    }
+
     private Caravan seedCaravan(UUID campaignId, String ruleSetVersionId, UUID dayId) {
         UUID caravanId = UUID.randomUUID();
         UUID travelerId = UUID.randomUUID();
@@ -597,6 +652,7 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
                 List.of(),
                 List.of(),
                 List.of(),
+                List.of(),
                 List.of(new TowingAssignment(beastId, cartId, dayId)));
         Beast beast = new Beast(
                 beastId,
@@ -638,7 +694,10 @@ public class CampaignDailyCycleApplicationService implements CampaignDailyCycleU
                 List.of(),
                 List.of(),
                 List.of(),
-                List.of());
+                List.of(),
+                List.of(),
+                ZERO,
+                ZERO);
     }
 
     private void appendAuditEntry(

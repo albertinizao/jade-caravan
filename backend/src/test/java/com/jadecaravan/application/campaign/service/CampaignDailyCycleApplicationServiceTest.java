@@ -16,6 +16,7 @@ import com.jadecaravan.domain.rules.RuleDecision;
 import com.jadecaravan.domain.rules.RuleResolutionAuditEntry;
 import com.jadecaravan.domain.catalog.CatalogRegistry;
 import com.jadecaravan.domain.calculation.CaravanCalculationService;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -63,6 +64,29 @@ class CampaignDailyCycleApplicationServiceTest {
 
         CampaignDailyCycleState reopened = service.reopenDay(campaignId, initialState.activeDayId(), "Director de juego", "test", "Reabrir para ajuste");
         assertThat(reopened.activeDay().status()).isEqualTo(CampaignDayStatus.RESOLVING);
+    }
+
+    @Test
+    void treasureGiftsReduceDiscontentMoreWhenTheyExceedThePreviousReference() {
+        UUID campaignId = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        CampaignDailyCycleState state = service.getState(campaignId)
+                .withCaravan(service.getState(campaignId).caravan()
+                        .withCurrentDiscontent(new BigDecimal("5"))
+                        .withLastTreasureGiftQuantity(BigDecimal.ONE))
+                .withOperations(List.of(new com.jadecaravan.domain.campaign.DailyOperation(
+                        UUID.randomUUID(),
+                        service.getState(campaignId).activeDayId(),
+                        com.jadecaravan.domain.campaign.DailyOperationType.GIFTING,
+                        "Gift treasure",
+                        new BigDecimal("2"),
+                        "TREASURE",
+                        "Treasure gift")));
+        dailyCycleRepository.save(state);
+
+        CampaignDaySummary summary = service.closeDay(campaignId, state.activeDayId(), "Director de juego", "test", "Cierre con tesoro");
+
+        assertThat(summary.discontentAfter()).isEqualByComparingTo("2");
+        assertThat(service.getState(campaignId).caravan().lastTreasureGiftQuantity()).isEqualByComparingTo("2");
     }
 
     @Test

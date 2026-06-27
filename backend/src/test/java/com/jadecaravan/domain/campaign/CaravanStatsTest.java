@@ -47,7 +47,10 @@ class CaravanStatsTest {
                 java.util.List.of(),
                 java.util.List.of(),
                 java.util.List.of(),
-                java.util.List.of());
+                java.util.List.of(),
+                java.util.List.of(),
+                java.math.BigDecimal.ZERO,
+                java.math.BigDecimal.ZERO);
 
         assertEquals(new BigDecimal("0.5"), caravan.travellers().get(0).occupancyUnits());
         assertEquals(new BigDecimal("0.5"), caravan.totalTravellerOccupancy());

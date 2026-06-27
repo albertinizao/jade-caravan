@@ -77,6 +77,15 @@ export interface CartUpgradeInstanceSummary {
   notes?: string | null;
 }
 
+export interface CaravanFeatInstanceSummary {
+  id: string;
+  caravanId: string;
+  featKey: string;
+  parameters: Record<string, string>;
+  consumed: boolean;
+  notes?: string | null;
+}
+
 export interface CartPassengerAssignmentSummary {
   cartId: string;
   travellerId: string;
@@ -355,6 +364,7 @@ export interface CartSummary {
   destroyed: boolean;
   currentHitPoints: number;
   notes?: string | null;
+  traits?: string[];
   upgradeInstances?: CartUpgradeInstanceSummary[];
   towingAssignments: TowingAssignmentSummary[];
   passengerAssignments: CartPassengerAssignmentSummary[];
@@ -420,10 +430,13 @@ export interface CampaignDailyCycleState {
     beasts: BeastSummary[];
     inventoryLots: InventoryLotSummary[];
     campaignDays: CampaignDay[];
+    featInstances?: CaravanFeatInstanceSummary[];
     checkResolutions: CheckResolutionSummary[];
     caravanEvents: CaravanEventSummary[];
     tradeTransactions: TradeTransactionSummary[];
     ledgerEntries: LedgerEntrySummary[];
+    lastCargoGiftQuantity?: string;
+    lastTreasureGiftQuantity?: string;
   };
   activeDayId: string;
   lastSummary?: CampaignDaySummary | null;

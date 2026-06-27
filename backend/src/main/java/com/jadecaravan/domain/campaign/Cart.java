@@ -13,6 +13,7 @@ public record Cart(
         int currentHitPoints,
         boolean destroyed,
         String notes,
+        List<String> traits,
         List<CartUpgradeInstance> upgradeInstances,
         List<CartPassengerAssignment> passengerAssignments,
         List<CartCargoAllocation> cargoAllocations,
@@ -24,6 +25,7 @@ public record Cart(
         DomainValidation.requireNonBlank(name, "name");
         DomainValidation.requireNonNull(cartType, "cartType");
         DomainValidation.requireNonNegative(currentHitPoints, "currentHitPoints");
+        traits = traits == null ? List.of() : List.copyOf(traits);
         upgradeInstances = DomainCollections.immutableCopy(upgradeInstances);
         passengerAssignments = DomainCollections.immutableCopy(passengerAssignments);
         cargoAllocations = DomainCollections.immutableCopy(cargoAllocations);
@@ -63,6 +65,7 @@ public record Cart(
                 currentHitPoints,
                 destroyed,
                 notes,
+                traits,
                 DomainCollections.append(upgradeInstances, upgradeInstance),
                 passengerAssignments,
                 cargoAllocations,
@@ -82,6 +85,7 @@ public record Cart(
                 currentHitPoints,
                 destroyed,
                 notes,
+                traits,
                 upgradeInstances,
                 DomainCollections.append(passengerAssignments, passengerAssignment),
                 cargoAllocations,
@@ -101,6 +105,7 @@ public record Cart(
                 currentHitPoints,
                 destroyed,
                 notes,
+                traits,
                 upgradeInstances,
                 passengerAssignments,
                 DomainCollections.append(cargoAllocations, cargoAllocation),
@@ -120,6 +125,7 @@ public record Cart(
                 currentHitPoints,
                 destroyed,
                 notes,
+                traits,
                 upgradeInstances,
                 passengerAssignments,
                 cargoAllocations,
@@ -135,6 +141,76 @@ public record Cart(
                 currentHitPoints,
                 destroyed,
                 newNotes,
+                traits,
+                upgradeInstances,
+                passengerAssignments,
+                cargoAllocations,
+                towingAssignments);
+    }
+
+    public Cart withTrait(String trait) {
+        DomainValidation.requireNonBlank(trait, "trait");
+        if (hasTrait(trait)) {
+            return this;
+        }
+        return new Cart(
+                id,
+                caravanId,
+                name,
+                cartType,
+                currentHitPoints,
+                destroyed,
+                notes,
+                DomainCollections.append(traits, trait.trim()),
+                upgradeInstances,
+                passengerAssignments,
+                cargoAllocations,
+                towingAssignments);
+    }
+
+    public Cart withTraits(List<String> newTraits) {
+        return new Cart(
+                id,
+                caravanId,
+                name,
+                cartType,
+                currentHitPoints,
+                destroyed,
+                notes,
+                newTraits,
+                upgradeInstances,
+                passengerAssignments,
+                cargoAllocations,
+                towingAssignments);
+    }
+
+    public Cart withDestroyed(boolean newDestroyed) {
+        return new Cart(
+                id,
+                caravanId,
+                name,
+                cartType,
+                currentHitPoints,
+                newDestroyed,
+                notes,
+                traits,
+                upgradeInstances,
+                passengerAssignments,
+                cargoAllocations,
+                towingAssignments);
+    }
+
+    public Cart withCurrentHitPoints(int newCurrentHitPoints) {
+        DomainValidation.requireNonNegative(newCurrentHitPoints, "newCurrentHitPoints");
+        return new Cart(
+                id,
+                caravanId,
+                name,
+                cartType,
+                newCurrentHitPoints,
+                destroyed,
+                notes,
+                traits,
                 upgradeInstances,
                 passengerAssignments,
                 cargoAllocations,
@@ -153,6 +229,14 @@ public record Cart(
         return upgradeInstances.stream()
                 .filter(CartUpgradeInstance::active)
                 .anyMatch(upgradeInstance -> upgradeInstance.upgrade().key().equalsIgnoreCase(normalizedUpgradeKey));
+    }
+
+    public boolean hasTrait(String trait) {
+        if (trait == null) {
+            return false;
+        }
+        String normalizedTrait = trait.trim();
+        return traits.stream().anyMatch(existingTrait -> existingTrait.equalsIgnoreCase(normalizedTrait));
     }
 
     public List<CartUpgradeInstance> activeUpgrades() {
