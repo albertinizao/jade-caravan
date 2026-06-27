@@ -221,13 +221,13 @@ public final class CaravanCalculationService {
                 "Scouts are excluded"));
 
         BigDecimal cartConsumption = caravan.operativeCarts().stream()
-                .map(cart -> BigDecimal.valueOf(cart.cartType().consumption().longValue()))
+                .map(CaravanBusinessRules::effectiveCartConsumption)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         breakdown.add(new CalculationBreakdownItem(
                 "Operative cart consumption",
                 cartConsumption,
                 "caravan.carts",
-                "Sum of operative cart consumption"));
+                "Sum of operative cart consumption including active upgrades"));
 
         BigDecimal adjustedTravellerConsumption = travellerConsumption;
         if (hasFeat(calculationContext, "INTERMITTENT_FAST")) {
@@ -551,7 +551,10 @@ public final class CaravanCalculationService {
         CalculationResult<BigDecimal> passengerCapacity = CaravanBusinessRules.calculatePassengerCapacity(caravan, catalogRegistry, ruleState);
         CalculationResult<BigDecimal> cargoCapacity = CaravanBusinessRules.calculateCargoCapacity(caravan, catalogRegistry, ruleState);
         CalculationResult<BigDecimal> towingStrength = CaravanBusinessRules.calculateTowingStrength(caravan, catalogRegistry, campaignDay.id());
-        CalculationResult<BigDecimal> requiredTowingStrength = CaravanBusinessRules.calculateRequiredTowingStrength(caravan, catalogRegistry);
+        CalculationResult<BigDecimal> requiredTowingStrength = CaravanBusinessRules.calculateRequiredTowingStrength(
+                caravan,
+                catalogRegistry,
+                calculationContext.travelContext());
         CalculationResult<BigDecimal> speed = calculateSpeedMilesPerDay(caravan, catalogRegistry, ruleState, calculationContext, campaignDay.id());
         CalculationResult<BigDecimal> consumption = calculateDailyConsumption(caravan, campaignDay, calculationContext);
         CalculationResult<BigDecimal> mutiny = CaravanBusinessRules.calculateMutinyPenalty(caravan);
@@ -718,7 +721,7 @@ public final class CaravanCalculationService {
                 }
                 caravan.findBeast(assignment.beastId())
                         .filter(Beast::activeAsTowing)
-                        .ifPresent(beast -> speeds.add(BigDecimal.valueOf(beast.speedFeet()).divide(BigDecimal.TEN, 2, RoundingMode.HALF_UP)));
+                        .ifPresent(beast -> speeds.add(CaravanBusinessRules.baseSpeedMilesPerDay(beast.speedFeet())));
             }
         }
         if (speeds.isEmpty()) {

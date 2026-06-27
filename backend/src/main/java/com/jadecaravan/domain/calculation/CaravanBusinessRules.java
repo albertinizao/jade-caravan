@@ -115,7 +115,10 @@ public final class CaravanBusinessRules {
         CalculationResult<BigDecimal> passengerCapacity = calculatePassengerCapacity(caravan, catalogRegistry, ruleState);
         CalculationResult<BigDecimal> cargoCapacity = calculateCargoCapacity(caravan, catalogRegistry, ruleState);
         CalculationResult<BigDecimal> towingStrength = calculateTowingStrength(caravan, catalogRegistry, campaignDay.id());
-        CalculationResult<BigDecimal> requiredTowingStrength = calculateRequiredTowingStrength(caravan, catalogRegistry);
+        CalculationResult<BigDecimal> requiredTowingStrength = calculateRequiredTowingStrength(
+                caravan,
+                catalogRegistry,
+                context);
 
         breakdown.addAll(passengerCapacity.breakdown());
         breakdown.addAll(cargoCapacity.breakdown());
@@ -255,13 +258,21 @@ public final class CaravanBusinessRules {
     public static CalculationResult<BigDecimal> calculateRequiredTowingStrength(
             Caravan caravan,
             CatalogRegistry catalogRegistry) {
+        return calculateRequiredTowingStrength(caravan, catalogRegistry, TravelContext.empty());
+    }
+
+    public static CalculationResult<BigDecimal> calculateRequiredTowingStrength(
+            Caravan caravan,
+            CatalogRegistry catalogRegistry,
+            TravelContext travelContext) {
         Objects.requireNonNull(caravan, "caravan must not be null");
         Objects.requireNonNull(catalogRegistry, "catalogRegistry must not be null");
+        TravelContext context = travelContext == null ? TravelContext.empty() : travelContext;
 
         List<CalculationBreakdownItem> breakdown = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
         for (Cart cart : caravan.operativeCarts()) {
-            BigDecimal required = BigDecimal.valueOf(cart.cartType().propulsionRequirement());
+            BigDecimal required = requiredTowingStrengthForCart(cart, context);
             breakdown.add(new CalculationBreakdownItem(
                     "Base propulsion requirement for " + cart.name(),
                     required,
@@ -694,7 +705,7 @@ public final class CaravanBusinessRules {
     }
 
     public static BigDecimal requiredTowingStrengthForCart(Cart cart, TravelContext travelContext) {
-        BigDecimal required = BigDecimal.valueOf(cart.cartType().propulsionRequirement());
+        BigDecimal required = BigDecimal.valueOf(effectivePropulsionRequirement(cart));
         if (cart.hasActiveUpgrade("ICE_RUNNERS")) {
             if (travelContext != null && travelContext.frozenTerrain()) {
                 required = required.divide(BigDecimal.valueOf(2), 2, RoundingMode.CEILING);
@@ -703,6 +714,42 @@ public final class CaravanBusinessRules {
             }
         }
         return required;
+    }
+
+    static BigDecimal effectiveCartConsumption(Cart cart) {
+        BigDecimal consumption = cart.cartType().consumption();
+        if (cart.hasActiveUpgrade("TWO_HORSE_TRAIN")) {
+            consumption = consumption.add(BigDecimal.ONE);
+        }
+        if (cart.hasActiveUpgrade("FOUR_HORSE_TRAIN")) {
+            consumption = consumption.add(BigDecimal.valueOf(2));
+        }
+        if (cart.hasActiveUpgrade("SIX_HORSE_TRAIN")) {
+            consumption = consumption.add(BigDecimal.valueOf(2));
+        }
+        if (cart.hasActiveUpgrade("EIGHT_HORSE_TRAIN")) {
+            consumption = consumption.add(BigDecimal.valueOf(2));
+        }
+        return consumption;
+    }
+
+    static int effectivePropulsionRequirement(Cart cart) {
+        int requirement = cart.cartType().propulsionRequirement();
+        if (cart.hasActiveUpgrade("ARMOURED") || cart.hasActiveUpgrade("ARMORED")) {
+            requirement *= 2;
+        }
+        return requirement;
+    }
+
+    static BigDecimal baseSpeedMilesPerDay(int speedFeet) {
+        return switch (speedFeet) {
+            case 20 -> BigDecimal.valueOf(8);
+            case 30 -> BigDecimal.valueOf(16);
+            case 40 -> BigDecimal.valueOf(24);
+            case 50 -> BigDecimal.valueOf(32);
+            case 60 -> BigDecimal.valueOf(40);
+            default -> BigDecimal.valueOf(speedFeet).divide(BigDecimal.TEN, 2, RoundingMode.HALF_UP);
+        };
     }
 
     public static int towingFatigueThresholdDays(BigDecimal towingStrength, BigDecimal requiredStrength) {

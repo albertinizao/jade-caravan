@@ -46,6 +46,26 @@ class CaravanCalculationServiceTest {
     }
 
     @Test
+    void dailyConsumptionUsesEffectiveCartConsumption() {
+        CampaignDay day = campaignDay();
+        Cart cart = cart(
+                CatalogRegistry.seeded().cartType("TRAVELLER_CART"),
+                List.of(upgradeInstance("TWO_HORSE_TRAIN")),
+                List.of(),
+                List.of());
+        Caravan caravan = caravan(
+                List.of(),
+                List.of(cart),
+                List.of(),
+                List.of(),
+                1);
+
+        CalculationResult<BigDecimal> result = service.calculateDailyConsumption(caravan, day, CaravanCalculationContext.empty());
+
+        assertEquals(new BigDecimal("3"), result.value());
+    }
+
+    @Test
     void dailyConsumptionSupportsFastingEfficiencyAndCelebration() {
         CampaignDay day = campaignDay();
         Caravan caravan = caravan(
@@ -93,6 +113,70 @@ class CaravanCalculationServiceTest {
         CalculationResult<Integer> result = service.calculateRoleModifier(caravan, day, com.jadecaravan.domain.campaign.CheckType.SECURITY, registry, context);
 
         assertEquals(5, result.value());
+    }
+
+    @Test
+    void documentedSpeedTableIsUsedForKnownCreatureSpeeds() {
+        CatalogRegistry registry = CatalogRegistry.seeded();
+        CampaignDay day = campaignDay();
+        UUID beastId = UUID.randomUUID();
+        UUID cartId = UUID.randomUUID();
+
+        Cart cart = cart(
+                cartId,
+                registry.cartType("TRAVELLER_CART"),
+                List.of(),
+                List.of(),
+                List.of(new com.jadecaravan.domain.campaign.TowingAssignment(beastId, cartId, day.id())));
+        Beast beast = beastForCart(beastId, cartId, day.id(), 10, 50);
+        Caravan caravan = caravan(
+                List.of(),
+                List.of(cart),
+                List.of(beast),
+                List.of(),
+                1);
+
+        CalculationResult<BigDecimal> result = service.calculateSpeedMilesPerDay(caravan, registry, CampaignRuleState.seeded(CAMPAIGN_ID), CaravanCalculationContext.empty(), day.id());
+
+        assertEquals(new BigDecimal("32"), result.value());
+    }
+
+    @Test
+    void caravanSummaryUsesFrozenTerrainWhenCalculatingIceRunnerRequirement() {
+        CatalogRegistry registry = CatalogRegistry.seeded();
+        CampaignDay day = campaignDay();
+        UUID beastId = UUID.randomUUID();
+        UUID cartId = UUID.randomUUID();
+
+        Cart cart = cart(
+                cartId,
+                registry.cartType("MUSEUM_CART"),
+                List.of(upgradeInstance("ICE_RUNNERS")),
+                List.of(),
+                List.of(new com.jadecaravan.domain.campaign.TowingAssignment(beastId, cartId, day.id())));
+        Beast beast = beastForCart(beastId, cartId, day.id(), 10, 50);
+        Caravan caravan = caravan(
+                List.of(),
+                List.of(cart),
+                List.of(beast),
+                List.of(),
+                1);
+        CaravanCalculationContext context = new CaravanCalculationContext(
+                new TravelContext("frozen", true, false, 0, BigDecimal.ZERO, BigDecimal.ZERO),
+                List.of(),
+                false,
+                false,
+                false,
+                null);
+
+        CalculationResult<CaravanCalculationSummary> result = service.calculateCaravanSummary(
+                caravan,
+                registry,
+                CampaignRuleState.seeded(CAMPAIGN_ID),
+                day,
+                context);
+
+        assertEquals(new BigDecimal("2.50"), result.value().requiredTowingStrength());
     }
 
     @Test
